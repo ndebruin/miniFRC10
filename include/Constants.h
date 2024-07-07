@@ -8,10 +8,12 @@
 #define rightEncB 39
 
 
-#define angZ_TURN_kS 0
-#define angZ_TURN_kP 0
-#define angZ_TURN_kI 0
-#define angZ_TURN_kD 0
+#define angZ_TURN_kS 0.7
+#define angZ_TURN_kP 0.001
+#define angZ_TURN_kI 0.00
+#define angZ_TURN_kD 0.0005
+
+#define angZ_TURN_LIMIT 0.3
 
 #define angZ_LINEAR_kS 0
 #define angZ_LINEAR_kP 0
@@ -21,13 +23,13 @@
 #define angZ_LINEAR_LIMIT 0.4
 
 // in degrees
-#define theta_ErrorThreshold 0.1
+#define theta_ErrorThreshold 0.5
 
-#define linY_kS 0.1
+#define linY_kS 0.0
 
-#define linY_kP 0
-#define linY_kI 0
-#define linY_kD 0
+#define linY_kP 0.0
+#define linY_kI 0.0
+#define linY_kD 0.0
 
 // in mm
 #define y_ErrorThreshold 0.5

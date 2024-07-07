@@ -4,7 +4,7 @@
 Drivetrain::Drivetrain(NoU_Motor* LeftMotor, NoU_Motor* RightMotor, IMU* IMU) 
                                     : leftMotor(LeftMotor), rightMotor(RightMotor), imu(IMU)
 { 
-    theta_Controller.SetSampleTime(50);
+    //theta_Controller.SetSampleTime(50);
 }
 
 uint8_t Drivetrain::getMode(){
@@ -78,19 +78,23 @@ uint8_t Drivetrain::update(){
     if(driveMode == 2){
         if(abs(theta_Setpoint-current_Theta) < theta_ErrorThreshold){
             driveMode = 0;
+            Turn(false, 0);
             return 1;
         }
 
         theta_Controller.Compute();
+        
 
-        double angZ_kS_dir = 1;
-        if(theta_Setpoint < current_Theta){
-            angZ_kS_dir = -1;
+        
+        int direction = -1;
+        if(current_Theta > theta_Setpoint){
+            direction = 1;
         }
 
-        ArcadeDrive(0, angZ_Out + (angZ_TURN_kS * angZ_kS_dir));
-    }
+        powerOut = direction*(angZ_TURN_kS + abs(angZ_Out));
 
+        ArcadeDrive(0, powerOut);
+    }
     return 0;
 }
 
@@ -216,9 +220,7 @@ void Drivetrain::TurnToAngle(double theta)
     theta_Setpoint = theta;
 
     theta_Controller.SetTunings(angZ_TURN_kP, angZ_TURN_kI, angZ_TURN_kD);
-
-    theta_Controller.SetOutputLimits(-1,1);
-    theta_Controller.Compute();
+    theta_Controller.SetOutputLimits(-angZ_TURN_LIMIT,angZ_TURN_LIMIT);
     theta_Controller.SetMode(AUTOMATIC);
 }
 

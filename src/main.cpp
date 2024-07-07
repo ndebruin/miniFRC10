@@ -3,6 +3,10 @@
 #include <AlfredoConnect.h>
 #include <Alfredo_NoU2.h>
 #include <ESP32Encoder.h>
+#include <Wire.h>
+#include <ICM_20948.h>
+#include <VL53L0X.h>
+#include <PID_v1.h>
 
 #include "IMU.h"
 #include "Drivetrain.h"
@@ -21,7 +25,7 @@
 ////////////////////////////////////////////////////////////////////// Hardware Declarations //////////////////////////////////////////////////////////////////////
 
 // define bluetooth serial connection
-BluetoothSerial serialBT;
+BluetoothSerial serialBluetooth;
 String robotName = "Team 43";
 
 // define motors
@@ -51,8 +55,8 @@ NoU_Motor bottomMotor(bottomMotorChannel);
 ////////////////////////////////////////////////////////////////////// setup() //////////////////////////////////////////////////////////////////////
 void setup() {
   // begin DS comms
-  serialBT.begin(robotName);
-  AlfredoConnect.begin(serialBT); // providing true means we won't get annoying errors regarding lack of joystick data
+  serialBluetooth.begin(robotName);
+  AlfredoConnect.begin(serialBluetooth); // providing true means we won't get annoying errors regarding lack of joystick data
 
   // start RSL
   pinMode(LED_BUILTIN, OUTPUT);
@@ -65,7 +69,6 @@ void setup() {
 }
 ////////////////////////////////////////////////////////////////////// loop() //////////////////////////////////////////////////////////////////////
 void loop() {
-  
   // parse updates from driver station
   AlfredoConnect.update();
 
@@ -75,8 +78,17 @@ void loop() {
   //uint8_t error_Intake = intake.update();
   // uint8_t error_Shooter = shooter.update();
 
-  serialBT.println("Y Error: " + String(drivetrain.getYError()));
-  serialBT.println("Theta Error: " + String(drivetrain.getThetaError()));
+  if(error_Drivetrain != 1){
+    serialBluetooth.println("Theta Error: " + String(drivetrain.getThetaError()) + " AngZ_Out: " + String(drivetrain.getAngZOut()));
+  }
+  else{
+    serialBluetooth.println("done");
+  }
+
+  //serialBluetooth.print("\033c");
+  // serialBluetooth.println("    Y Error: " + String(drivetrain.getYError()));
+  
+  
 
   double throttle = 0;
   double rotation = 0;
@@ -96,7 +108,11 @@ void loop() {
   }
 
   if(AlfredoConnect.keyHeld(Key::T)){
-    drivetrain.LinearHeadingDrive(100);
+    drivetrain.TurnToAngle(90);
+  }
+
+  if(AlfredoConnect.keyHeld(Key::Enter)){
+    drivetrain.cancelAuto();
   }
   
 

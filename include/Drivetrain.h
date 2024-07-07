@@ -20,20 +20,30 @@ class Drivetrain
 
         uint8_t getMode();
 
+        double getAngZOut(){
+            return powerOut;
+        }
+
         double getYError(){
-            return abs(ySetpoint-currentY);
+            return ySetpoint-currentY;
         }
 
         double getThetaError(){
-            return abs(theta_Setpoint - current_Theta);
+            return theta_Setpoint - current_Theta;
         }
 
+        void Turn(bool right, double angZ);
         void ArcadeDrive(double linY, double AngZ);
         void ChezyDrive(double linY, double AngZ, boolean isQuickTurn);
         void LinearHeadingDrive(double mm);
         void LinearHeadingDrive(double mm, double theta);
         void TurnToAngle(double theta);
         void ArcLengthDrive(double radius, double theta, bool right);
+
+        void cancelAuto(){
+            driveMode = 0;
+            ArcadeDrive(0,0);
+        }
 
 
     private:
@@ -51,17 +61,19 @@ class Drivetrain
 
         // y PID controller
         PID y_Controller{&currentY, &linY_Out, &ySetpoint, linY_kP, linY_kI, linY_kD, DIRECT};
-        double ySetpoint; // using ticks
-        double currentY;  // using ticks
-        double linY_Out;  // using (-1,1)
+        double ySetpoint = 0; // using ticks
+        double currentY = 0;  // using ticks
+        double linY_Out = 0;  // using (-1,1)
         
 
 
         // theta PID controller
         PID theta_Controller{&current_Theta, &angZ_Out, &theta_Setpoint, angZ_TURN_kP, angZ_TURN_kI, angZ_TURN_kD, DIRECT};
-        double theta_Setpoint; // using (-180,180)
-        double current_Theta;  // using (-180,180)
-        double angZ_Out;       // using (-1,1)
+        double theta_Setpoint = 0; // using (-180,180)
+        double current_Theta = 0;  // using (-180,180)
+        double angZ_Out = 0;       // using (-1,1)
+
+        double powerOut;
         
 
         // chezy drive values
