@@ -13,20 +13,28 @@
 class Drivetrain
 {
     public:
-        Drivetrain::Drivetrain(NoU_Motor* LeftMotor, NoU_Motor* RightMotor, IMU* IMU);
+        Drivetrain(NoU_Motor* LeftMotor, NoU_Motor* RightMotor, IMU* IMU);
         uint8_t begin();
         uint8_t update();
+        int8_t updateIMU();
+
+        uint8_t getMode();
+
+        double getYError(){
+            return abs(ySetpoint-currentY);
+        }
+
+        double getThetaError(){
+            return abs(theta_Setpoint - current_Theta);
+        }
 
         void ArcadeDrive(double linY, double AngZ);
         void ChezyDrive(double linY, double AngZ, boolean isQuickTurn);
-        void LinearHeadingDrive(double linY, double theta);
+        void LinearHeadingDrive(double mm);
+        void LinearHeadingDrive(double mm, double theta);
         void TurnToAngle(double theta);
         void ArcLengthDrive(double radius, double theta, bool right);
 
-
-        
-        
-        
 
     private:
         ESP32Encoder leftEncoder;
@@ -41,18 +49,31 @@ class Drivetrain
         // 3 - curve drive along an arc
         uint8_t driveMode;
 
+        // y PID controller
+        PID y_Controller{&currentY, &linY_Out, &ySetpoint, linY_kP, linY_kI, linY_kD, DIRECT};
+        double ySetpoint; // using ticks
+        double currentY;  // using ticks
+        double linY_Out;  // using (-1,1)
+        
+
+
         // theta PID controller
-        double theta_Setpoint;
-        double current_Theta;
-        double angZ_Out;
-        PID theta_Controller{&current_Theta, &angZ_Out, &theta_Setpoint, angZ_kP, angZ_kI, angZ_kD, DIRECT};
+        PID theta_Controller{&current_Theta, &angZ_Out, &theta_Setpoint, angZ_TURN_kP, angZ_TURN_kI, angZ_TURN_kD, DIRECT};
+        double theta_Setpoint; // using (-180,180)
+        double current_Theta;  // using (-180,180)
+        double angZ_Out;       // using (-1,1)
+        
 
         // chezy drive values
         float quickStopThreshold = 0.2;
         float quickStopAlpha = 0.1;
         float quickStopAccumulator;
 
-
+        void resetEncoders(){
+            currentY = 0;
+            leftEncoder.setCount(0);
+            rightEncoder.setCount(0);
+        }
 };
 
 #endif

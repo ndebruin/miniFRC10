@@ -8,6 +8,7 @@
   1 - Cannot communicate with IMU
   2 - DMP setup failed
 */
+
 IMU::IMU(uint8_t SDA, uint8_t SCL){
   _sda = SDA;
   _scl = SCL;

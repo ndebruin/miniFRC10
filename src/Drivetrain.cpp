@@ -7,6 +7,9 @@ Drivetrain::Drivetrain(NoU_Motor* LeftMotor, NoU_Motor* RightMotor, IMU* IMU)
     theta_Controller.SetSampleTime(50);
 }
 
+uint8_t Drivetrain::getMode(){
+    return driveMode;
+}
 
 uint8_t Drivetrain::begin(){
     leftMotor->setInverted(false);
@@ -17,14 +20,61 @@ uint8_t Drivetrain::begin(){
     leftEncoder.setCount(0);
     rightEncoder.setCount(0);
 
+    return imu->begin();
+}
+int8_t Drivetrain::updateIMU(){
+    return imu->read();
 }
 
-// does nothing during open loop control
+// this should be run as fast as possible to allow for constant updates to yaw and control loops
 uint8_t Drivetrain::update(){
+    // update our yaw coordinate 
     current_Theta = imu->getYaw();
+
+    // if we're in an open loop mode, we can't run the PID controllers.
     if(driveMode == 0){
         theta_Controller.SetMode(MANUAL);
+        y_Controller.SetMode(MANUAL);
     }
+
+    // linear heading
+    if(driveMode == 1){
+        // if we're in our tolerance, stop
+        if(abs(ySetpoint-currentY) < y_ErrorThreshold){
+            driveMode = 0;
+            return 1;
+        }
+
+        // compute control value for angularZ
+        theta_Controller.Compute();
+
+        // add feedforward for angZ
+        double angZ_kS_dir = 1;
+        if(theta_Setpoint < current_Theta){
+            angZ_kS_dir = -1;
+        }
+        angZ_Out += (angZ_TURN_kS * angZ_kS_dir);
+
+        // find the median of the two encoders (to account for turning actions)
+        currentY = (leftEncoder.getCount() + rightEncoder.getCount()) / 2;
+
+        // compute control value for Y
+        y_Controller.Compute();
+        
+        // add feedforward to linY
+        double linY_kS_dir = 1;
+        if(ySetpoint < currentY){
+            linY_kS_dir = -1;
+        }
+        linY_Out += (linY_kS * linY_kS_dir);
+
+        ArcadeDrive(linY_Out, angZ_Out);
+
+
+    }
+
+
+    // turn to angle
     if(driveMode == 2){
         if(abs(theta_Setpoint-current_Theta) < theta_ErrorThreshold){
             driveMode = 0;
@@ -38,8 +88,10 @@ uint8_t Drivetrain::update(){
             angZ_kS_dir = -1;
         }
 
-        ArcadeDrive(0, angZ_Out + (angZ_kS * angZ_kS_dir));
+        ArcadeDrive(0, angZ_Out + (angZ_TURN_kS * angZ_kS_dir));
     }
+
+    return 0;
 }
 
 // copied from Alfredo
@@ -126,10 +178,34 @@ void Drivetrain::ChezyDrive(double linY, double angZ, boolean isQuickTurn)
     rightMotor->set(rightPower);
 }
 
+// drive in the current direction with heading correction 
+// (this functionally overloads to theta = current_Theta)
+void Drivetrain::LinearHeadingDrive(double mm){
+    LinearHeadingDrive(mm, current_Theta);
+}
+
 // drive in a direction with heading correction
-void Drivetrain::LinearHeadingDrive(double linY, double theta)
+void Drivetrain::LinearHeadingDrive(double mm, double theta)
 {
     driveMode = 1;
+
+    resetEncoders();
+
+    theta_Setpoint = theta;
+
+    ySetpoint = mm/mmPerTick;
+
+    // setup heading correction control loop
+    theta_Controller.SetTunings(angZ_LINEAR_kP, angZ_LINEAR_kI, angZ_LINEAR_kD);
+    theta_Controller.SetOutputLimits(-angZ_LINEAR_LIMIT,angZ_LINEAR_LIMIT);
+    theta_Controller.Compute();
+    theta_Controller.SetMode(AUTOMATIC);
+
+    // setup distance control loop
+    y_Controller.SetTunings(linY_kP, linY_kI, linY_kD);
+    y_Controller.SetOutputLimits(-1.0,1.0);
+    y_Controller.Compute();
+    y_Controller.SetMode(AUTOMATIC);
 }
 
 // turn to angle. 
@@ -138,6 +214,8 @@ void Drivetrain::TurnToAngle(double theta)
     driveMode = 2;
     
     theta_Setpoint = theta;
+
+    theta_Controller.SetTunings(angZ_TURN_kP, angZ_TURN_kI, angZ_TURN_kD);
 
     theta_Controller.SetOutputLimits(-1,1);
     theta_Controller.Compute();
