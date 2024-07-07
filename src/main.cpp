@@ -1,0 +1,78 @@
+#include <Arduino.h>
+#include <BluetoothSerial.h>
+#include <AlfredoConnect.h>
+#include <Alfredo_NoU2.h>
+#include <ESP32Encoder.h>
+
+#include "IMU.h"
+#include "Drivetrain.h"
+
+#include "Constants.h"
+
+////////////////////////////////////////////////////////////////////// Function Declarations //////////////////////////////////////////////////////////////////////
+
+// function def
+
+
+
+
+////////////////////////////////////////////////////////////////////// Hardware Declarations //////////////////////////////////////////////////////////////////////
+
+// define bluetooth serial connection
+BluetoothSerial serialBT;
+String robotName = "Team 43";
+
+// define motors
+NoU_Motor leftMotor(leftMotorChannel);
+NoU_Motor rightMotor(rightMotorChannel);
+
+// define IMU
+IMU imu;
+
+// define drivetrain
+Drivetrain drivetrain = Drivetrain(&leftMotor, &rightMotor, &imu);
+
+
+
+////////////////////////////////////////////////////////////////////// Logic Declarations //////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////// setup() //////////////////////////////////////////////////////////////////////
+void setup() {
+  // begin DS comms
+  serialBT.begin(robotName);
+  AlfredoConnect.begin(serialBT, true); // providing true means we won't get annoying errors regarding lack of joystick data
+
+  // start RSL
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  // start drivetrain
+  drivetrain.begin();
+
+}
+////////////////////////////////////////////////////////////////////// loop() //////////////////////////////////////////////////////////////////////
+void loop() {
+  
+
+  // parse updates from driver station
+  AlfredoConnect.update();
+
+  // update all subsystems
+  drivetrain.update();
+  // shooter.update();
+  // intake.update();
+  
+
+
+
+}
+////////////////////////////////////////////////////////////////////// Function Code //////////////////////////////////////////////////////////////////////
+
+// joystick deadzone
+double deadzone(double deadZoneVal, double rawJoy){
+  if(fabs(rawJoy) < deadZoneVal){
+    return 0.0;
+  }
+  return rawJoy;
+}
+
