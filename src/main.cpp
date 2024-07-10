@@ -47,6 +47,7 @@ NoU_Motor bottomMotor(bottomMotorChannel);
 
 // Shooter shooter = Shooter(&topMotor, &bottomMotor);
 
+NoU_Servo testServo(1);
 
 
 ////////////////////////////////////////////////////////////////////// Logic Declarations //////////////////////////////////////////////////////////////////////
@@ -66,7 +67,13 @@ void setup() {
   //uint8_t error_Intake = intake.begin();
   // uint8_t error_Shooter = shooter.begin()
 
+  topMotor.setInverted(false);
+  bottomMotor.setInverted(true);
+
 }
+
+double top = 0;
+double bottom = 0;
 ////////////////////////////////////////////////////////////////////// loop() //////////////////////////////////////////////////////////////////////
 void loop() {
   // parse updates from driver station
@@ -95,13 +102,21 @@ void loop() {
   
   if (AlfredoConnect.keyHeld(Key::W)) {
         throttle = 0.9;
+        top = 0.7;
+        bottom = 0.9;
   } else if (AlfredoConnect.keyHeld(Key::S)) {
         throttle = -0.9;
+        top = 0.0;
+        bottom = 0.0;
   }
   if (AlfredoConnect.keyHeld(Key::A)) {
         rotation = -0.9;
+        top = 0.6;
+        bottom = 0.8;
   } else if (AlfredoConnect.keyHeld(Key::D)) {
         rotation = 0.9;
+        top = 0.9;
+        bottom = 0.6;
   }
   if(AlfredoConnect.keyHeld(Key::Space)){
     drivetrain.ArcadeDrive(throttle, rotation);
@@ -114,9 +129,11 @@ void loop() {
   if(AlfredoConnect.keyHeld(Key::Enter)){
     drivetrain.cancelAuto();
   }
-  
 
-  
+  topMotor.set(top);
+  bottomMotor.set(bottom);
+
+
 
 }
 ////////////////////////////////////////////////////////////////////// Function Code //////////////////////////////////////////////////////////////////////

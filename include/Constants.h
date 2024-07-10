@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////// Drivetrain //////////////////////////////////////////////////////////////////////
 
-#define leftMotorChannel 2
-#define rightMotorChannel 4
+#define leftMotorChannel 4
+#define rightMotorChannel 2
 #define leftEncA 34
 #define leftEncB 35
 #define rightEncA 36
@@ -32,7 +32,7 @@
 #define linY_kD 0.0
 
 // in mm
-#define y_ErrorThreshold 0.5
+#define y_ErrorThreshold 0.5 * mmPerTick
 
 // diamater * pi / ticks per rev
 // divide to convert mm -> tick
@@ -42,8 +42,8 @@
 
 ////////////////////////////////////////////////////////////////////// Shooter //////////////////////////////////////////////////////////////////////
 
-#define topMotorChannel 
-#define bottomMotorChannel
+#define topMotorChannel 3
+#define bottomMotorChannel 1
 
 #define AMP_Top_kS 0
 #define AMP_Bottom_kS 0

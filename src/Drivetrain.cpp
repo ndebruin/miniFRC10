@@ -34,42 +34,28 @@ uint8_t Drivetrain::update(){
     // if we're in an open loop mode, we can't run the PID controllers.
     if(driveMode == 0){
         theta_Controller.SetMode(MANUAL);
-        y_Controller.SetMode(MANUAL);
     }
 
     // linear heading
     if(driveMode == 1){
-        // if we're in our tolerance, stop
-        if(abs(ySetpoint-currentY) < y_ErrorThreshold){
-            driveMode = 0;
+        // find the median of the two encoders (to account for turning actions)
+        // currentY = (leftEncoder.getCount() + rightEncoder.getCount()) / 2;
+
+        if(abs(theta_Setpoint-current_Theta) < y_ErrorThreshold){
+            cancelAuto();
             return 1;
         }
 
-        // compute control value for angularZ
         theta_Controller.Compute();
-
-        // add feedforward for angZ
-        double angZ_kS_dir = 1;
-        if(theta_Setpoint < current_Theta){
-            angZ_kS_dir = -1;
-        }
-        angZ_Out += (angZ_TURN_kS * angZ_kS_dir);
-
-        // find the median of the two encoders (to account for turning actions)
-        currentY = (leftEncoder.getCount() + rightEncoder.getCount()) / 2;
-
-        // compute control value for Y
-        y_Controller.Compute();
         
-        // add feedforward to linY
-        double linY_kS_dir = 1;
-        if(ySetpoint < currentY){
-            linY_kS_dir = -1;
+        int direction = -1;
+        if(current_Theta > theta_Setpoint){
+            direction = 1;
         }
-        linY_Out += (linY_kS * linY_kS_dir);
 
-        ArcadeDrive(linY_Out, angZ_Out);
+        angZ_powerOut = direction*(angZ_TURN_kS + abs(angZ_Out));
 
+        ArcadeDrive(0, angZ_powerOut);
 
     }
 
@@ -77,8 +63,7 @@ uint8_t Drivetrain::update(){
     // turn to angle
     if(driveMode == 2){
         if(abs(theta_Setpoint-current_Theta) < theta_ErrorThreshold){
-            driveMode = 0;
-            Turn(false, 0);
+            cancelAuto();
             return 1;
         }
 
@@ -91,9 +76,9 @@ uint8_t Drivetrain::update(){
             direction = 1;
         }
 
-        powerOut = direction*(angZ_TURN_kS + abs(angZ_Out));
+        angZ_powerOut = direction*(angZ_TURN_kS + abs(angZ_Out));
 
-        ArcadeDrive(0, powerOut);
+        ArcadeDrive(0, angZ_powerOut);
     }
     return 0;
 }
@@ -197,7 +182,7 @@ void Drivetrain::LinearHeadingDrive(double mm, double theta)
 
     theta_Setpoint = theta;
 
-    ySetpoint = mm/mmPerTick;
+    //ySetpoint = mm/mmPerTick;
 
     // setup heading correction control loop
     theta_Controller.SetTunings(angZ_LINEAR_kP, angZ_LINEAR_kI, angZ_LINEAR_kD);
@@ -206,10 +191,10 @@ void Drivetrain::LinearHeadingDrive(double mm, double theta)
     theta_Controller.SetMode(AUTOMATIC);
 
     // setup distance control loop
-    y_Controller.SetTunings(linY_kP, linY_kI, linY_kD);
+    /*y_Controller.SetTunings(linY_kP, linY_kI, linY_kD);
     y_Controller.SetOutputLimits(-1.0,1.0);
     y_Controller.Compute();
-    y_Controller.SetMode(AUTOMATIC);
+    y_Controller.SetMode(AUTOMATIC);*/
 }
 
 // turn to angle. 

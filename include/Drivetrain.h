@@ -21,18 +21,13 @@ class Drivetrain
         uint8_t getMode();
 
         double getAngZOut(){
-            return powerOut;
-        }
-
-        double getYError(){
-            return ySetpoint-currentY;
+            return angZ_powerOut;
         }
 
         double getThetaError(){
             return theta_Setpoint - current_Theta;
         }
 
-        void Turn(bool right, double angZ);
         void ArcadeDrive(double linY, double AngZ);
         void ChezyDrive(double linY, double AngZ, boolean isQuickTurn);
         void LinearHeadingDrive(double mm);
@@ -57,15 +52,7 @@ class Drivetrain
         // 1 - linear drive with heading correction
         // 2 - turn to angle
         // 3 - curve drive along an arc
-        uint8_t driveMode;
-
-        // y PID controller
-        PID y_Controller{&currentY, &linY_Out, &ySetpoint, linY_kP, linY_kI, linY_kD, DIRECT};
-        double ySetpoint = 0; // using ticks
-        double currentY = 0;  // using ticks
-        double linY_Out = 0;  // using (-1,1)
-        
-
+        uint8_t driveMode;      
 
         // theta PID controller
         PID theta_Controller{&current_Theta, &angZ_Out, &theta_Setpoint, angZ_TURN_kP, angZ_TURN_kI, angZ_TURN_kD, DIRECT};
@@ -73,7 +60,13 @@ class Drivetrain
         double current_Theta = 0;  // using (-180,180)
         double angZ_Out = 0;       // using (-1,1)
 
-        double powerOut;
+        double angZ_powerOut;
+
+        // straight line data
+        int64_t currentY;
+        int64_t desiredY;
+
+        // 
         
 
         // chezy drive values
