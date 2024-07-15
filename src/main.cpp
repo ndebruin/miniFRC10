@@ -1,17 +1,23 @@
 #include <Arduino.h>
+
+// Alfredo stuff
 #include <BluetoothSerial.h>
 #include <AlfredoConnect.h>
 #include <Alfredo_NoU2.h>
+
+// additional libraries
 #include <ESP32Encoder.h>
 #include <Wire.h>
 #include <ICM_20948.h>
 #include <VL53L0X.h>
 #include <PID_v1.h>
 
+// subsystems
 #include "IMU.h"
 #include "Drivetrain.h"
 #include "Intake.h"
 #include "Shooter.h"
+#include "Climber.h"
 
 #include "Constants.h"
 
@@ -28,6 +34,8 @@
 BluetoothSerial serialBluetooth;
 String robotName = "Team 43";
 
+State robotState;
+
 // define motors
 NoU_Motor leftMotor(leftMotorChannel);
 NoU_Motor rightMotor(rightMotorChannel);
@@ -40,14 +48,19 @@ Drivetrain drivetrain = Drivetrain(&leftMotor, &rightMotor, &imu);
 
 NoU_Motor intakeMotor(intakeMotorChannel);
 
-//Intake intake = Intake(&intakeMotor);
+VL53L0X tofSensor;
+
+Intake intake = Intake(&intakeMotor, &tofSensor, &robotState);
 
 NoU_Motor topMotor(topMotorChannel);
 NoU_Motor bottomMotor(bottomMotorChannel);
 
-// Shooter shooter = Shooter(&topMotor, &bottomMotor);
+Shooter shooter = Shooter(&topMotor, &bottomMotor, &robotState);
 
-NoU_Servo testServo(1);
+NoU_Servo leftClimber(leftClimberChannel);
+NoU_Servo rightClimber(rightClimberChannel);
+
+Climber climber = Climber(&leftClimber, &rightClimber, &robotState);
 
 
 ////////////////////////////////////////////////////////////////////// Logic Declarations //////////////////////////////////////////////////////////////////////
@@ -64,16 +77,14 @@ void setup() {
 
   // start subsystems
   uint8_t error_Drivetrain = drivetrain.begin();
-  //uint8_t error_Intake = intake.begin();
-  // uint8_t error_Shooter = shooter.begin()
+  uint8_t error_Intake = intake.begin();
+  uint8_t error_Shooter = shooter.begin();
+  uint8_t error_Climber = climber.begin();
 
-  topMotor.setInverted(false);
-  bottomMotor.setInverted(true);
 
 }
 
-double top = 0;
-double bottom = 0;
+
 ////////////////////////////////////////////////////////////////////// loop() //////////////////////////////////////////////////////////////////////
 void loop() {
   // parse updates from driver station
@@ -82,8 +93,9 @@ void loop() {
   // update all subsystems
   int8_t error_IMU = drivetrain.updateIMU();
   uint8_t error_Drivetrain = drivetrain.update();
-  //uint8_t error_Intake = intake.update();
-  // uint8_t error_Shooter = shooter.update();
+  uint8_t error_Intake = intake.update();
+  uint8_t error_Shooter = shooter.update();
+  uint8_t error_Climber = climber.update();
 
   if(error_Drivetrain != 1){
     serialBluetooth.println("Theta Error: " + String(drivetrain.getThetaError()) + " AngZ_Out: " + String(drivetrain.getAngZOut()));
@@ -102,21 +114,17 @@ void loop() {
   
   if (AlfredoConnect.keyHeld(Key::W)) {
         throttle = 0.9;
-        top = 0.7;
-        bottom = 0.9;
+
   } else if (AlfredoConnect.keyHeld(Key::S)) {
         throttle = -0.9;
-        top = 0.0;
-        bottom = 0.0;
+
   }
   if (AlfredoConnect.keyHeld(Key::A)) {
         rotation = -0.9;
-        top = 0.6;
-        bottom = 0.8;
+
   } else if (AlfredoConnect.keyHeld(Key::D)) {
         rotation = 0.9;
-        top = 0.9;
-        bottom = 0.6;
+
   }
   if(AlfredoConnect.keyHeld(Key::Space)){
     drivetrain.ArcadeDrive(throttle, rotation);
@@ -129,9 +137,6 @@ void loop() {
   if(AlfredoConnect.keyHeld(Key::Enter)){
     drivetrain.cancelAuto();
   }
-
-  topMotor.set(top);
-  bottomMotor.set(bottom);
 
 
 

@@ -1,19 +1,19 @@
 #include <Arduino.h>
 #include "Intake.h"
 
-Intake::Intake(NoU_Motor* IntakeMotor) : intakeMotor(IntakeMotor)
+Intake::Intake(NoU_Motor* IntakeMotor, VL53L0X* tofSensor, State* state) : intakeMotor(IntakeMotor), sensor(tofSensor), robotState(state)
 { }
 
 uint8_t Intake::begin(){
     Wire.begin();
 
-    sensor.setTimeout(500);
-    if(!sensor.init()){
+    sensor->setTimeout(500);
+    if(!sensor->init()){
         return 1;
     }
     
     // reduce timing budget to 20ms per measurement for higher speed readings
-    sensor.setMeasurementTimingBudget(20000);
+    sensor->setMeasurementTimingBudget(20000);
 
     stop();
 
@@ -21,7 +21,9 @@ uint8_t Intake::begin(){
 }
 
 uint8_t Intake::update(){
-    intakeMotor->set(setPower);
+    if(intakeMotor->getOutput() != setPower){
+        intakeMotor->set(setPower);
+    }
 
     if(intakeMode == 2){
         if(hasNote()){
@@ -41,7 +43,7 @@ uint8_t Intake::update(){
 }
 
 uint16_t Intake::getRange(){
-    return sensor.readRangeSingleMillimeters();
+    return sensor->readRangeSingleMillimeters();
 }
 
 uint8_t Intake::getMode(){
@@ -51,8 +53,10 @@ uint8_t Intake::getMode(){
 // this will likely have to be tuned / rewritten
 bool Intake::hasNote(){
     if(getRange() < Distance_EMPTY){
+        robotState->setNote(true);
         return true;
     }
+    robotState->setNote(false);
     return false;
 }
 
@@ -64,6 +68,11 @@ void Intake::stop(){
 void Intake::run(){
     intakeMode = 1;
     setPower = Intake_IN_kS;
+}
+
+void Intake::outtake(){
+    intakeMode = 1;
+    setPower = -Intake_IN_kS;
 }
 
 void Intake::run(double kS){

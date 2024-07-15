@@ -151,5 +151,10 @@ double IMU::getRoll(){
   return pitch;
 }
 double IMU::getYaw(){
-  return yaw+180.0;
+  return yaw+180.0 - yawOffset;
+}
+
+double IMU::setZero(){
+  yawOffset = yaw+180;
+  return yawOffset;
 }

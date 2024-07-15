@@ -18,6 +18,8 @@ class IMU
         double getYaw();
         int8_t read();
 
+        double setZero();
+
     private:
         uint8_t _sda;
         uint8_t _scl;
@@ -26,6 +28,8 @@ class IMU
         double pitch;
         double roll;
         double yaw;
+
+        double yawOffset = 0;
 };
 
 #endif
