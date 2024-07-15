@@ -82,3 +82,19 @@
 
 #define rightStowAngle   15
 #define rightDeployAngle 150
+
+////////////////////////////////////////////////////////////////////// Controller //////////////////////////////////////////////////////////////////////
+
+#define axisLinY 1
+#define axisAngZ 0
+
+#define buttonIntake 6 
+#define buttonExecute 7
+
+#define buttonAmp 1
+#define buttonPass 2
+#define buttonSub 0
+#define buttonPodium 3
+#define buttonSource 4
+
+#define buttonClimb 5

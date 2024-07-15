@@ -7,13 +7,14 @@
 #include <PID_v1.h>
 
 #include "IMU.h"
+#include "State.h"
 
 #include <Constants.h>
 
 class Drivetrain
 {
     public:
-        Drivetrain(NoU_Motor* LeftMotor, NoU_Motor* RightMotor, IMU* IMU);
+        Drivetrain(NoU_Motor* LeftMotor, NoU_Motor* RightMotor, IMU* IMU, State* state);
         uint8_t begin();
         uint8_t update();
         int8_t updateIMU();
@@ -46,7 +47,8 @@ class Drivetrain
         ESP32Encoder rightEncoder;
         NoU_Motor* leftMotor;
         NoU_Motor* rightMotor;
-        IMU* imu;        
+        IMU* imu;    
+        State* robotState;    
         
         // 0 - open loop
         // 1 - linear drive with heading correction

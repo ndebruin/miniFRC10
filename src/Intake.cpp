@@ -5,6 +5,8 @@ Intake::Intake(NoU_Motor* IntakeMotor, VL53L0X* tofSensor, State* state) : intak
 { }
 
 uint8_t Intake::begin(){
+    intakeMotor->setInverted(false);
+
     Wire.begin();
 
     sensor->setTimeout(500);
@@ -21,8 +23,10 @@ uint8_t Intake::begin(){
 }
 
 uint8_t Intake::update(){
-    if(intakeMotor->getOutput() != setPower){
-        intakeMotor->set(setPower);
+    if(robotState->isEnabled()){
+        if(intakeMotor->getOutput() != setPower){
+            intakeMotor->set(setPower);
+        }
     }
 
     if(intakeMode == 2){

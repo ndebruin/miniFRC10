@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include "Drivetrain.h"
 
-Drivetrain::Drivetrain(NoU_Motor* LeftMotor, NoU_Motor* RightMotor, IMU* IMU) 
-                                    : leftMotor(LeftMotor), rightMotor(RightMotor), imu(IMU)
+Drivetrain::Drivetrain(NoU_Motor* LeftMotor, NoU_Motor* RightMotor, IMU* IMU, State* state) 
+                                    : leftMotor(LeftMotor), rightMotor(RightMotor), imu(IMU), robotState(state)
 { 
     //theta_Controller.SetSampleTime(50);
 }
@@ -109,8 +109,10 @@ void Drivetrain::ArcadeDrive(double linY, double angZ)
             rightPower = maxInput;
         }
     }
-    leftMotor->set(leftPower);
-    rightMotor->set(rightPower);
+    if(robotState->isEnabled()){
+        leftMotor->set(leftPower);
+        rightMotor->set(rightPower);
+    }
 }
 
 // copied from Alfredo
@@ -162,9 +164,10 @@ void Drivetrain::ChezyDrive(double linY, double angZ, boolean isQuickTurn)
         leftPower /= maxMagnitude;
         rightPower /= maxMagnitude;
     }
-
-    leftMotor->set(leftPower);
-    rightMotor->set(rightPower);
+    if(robotState->isEnabled()){
+        leftMotor->set(leftPower);
+        rightMotor->set(rightPower);
+    }
 }
 
 // drive in the current direction with heading correction 

@@ -44,7 +44,7 @@ NoU_Motor rightMotor(rightMotorChannel);
 IMU imu = IMU(21, 22);
 
 // define drivetrain
-Drivetrain drivetrain = Drivetrain(&leftMotor, &rightMotor, &imu);
+Drivetrain drivetrain = Drivetrain(&leftMotor, &rightMotor, &imu, &robotState);
 
 NoU_Motor intakeMotor(intakeMotorChannel);
 
@@ -104,40 +104,88 @@ void loop() {
     serialBluetooth.println("done");
   }
 
+  if(error_Shooter == 1){ // shot finished
+    intake.stop();
+  }
+
   //serialBluetooth.print("\033c");
   // serialBluetooth.println("    Y Error: " + String(drivetrain.getYError()));
   
-  
+  float linY = AlfredoConnect.getAxis(0, axisLinY);
+  float angZ = AlfredoConnect.getAxis(0, axisAngZ);
 
-  double throttle = 0;
-  double rotation = 0;
-  
-  if (AlfredoConnect.keyHeld(Key::W)) {
-        throttle = 0.9;
+  drivetrain.ArcadeDrive(linY, angZ);
 
-  } else if (AlfredoConnect.keyHeld(Key::S)) {
-        throttle = -0.9;
-
+  // run intake
+  if(AlfredoConnect.buttonHeld(0, buttonIntake)){
+    intake.runUntilBreak();
   }
-  if (AlfredoConnect.keyHeld(Key::A)) {
-        rotation = -0.9;
-
-  } else if (AlfredoConnect.keyHeld(Key::D)) {
-        rotation = 0.9;
-
+  // ensure we aren't pulsating the intake while trying to shoot
+  else if(!AlfredoConnect.buttonHeld(0, buttonIntake)
+          && !AlfredoConnect.buttonHeld(0, buttonExecute))
+  {
+    intake.stop();
   }
-  if(AlfredoConnect.keyHeld(Key::Space)){
-    drivetrain.ArcadeDrive(throttle, rotation);
+
+  // queue system
+  if(AlfredoConnect.buttonHeld(0, buttonAmp)){
+    robotState.setNextShot(1);
+  }
+  else if(AlfredoConnect.buttonHeld(0, buttonSub)){
+    robotState.setNextShot(2);
+  }
+  else if(AlfredoConnect.buttonHeld(0, buttonPodium)){
+    robotState.setNextShot(3);
+  }
+  else if(AlfredoConnect.buttonHeld(0, buttonPass)){
+    robotState.setNextShot(4);
+  }
+  else if(AlfredoConnect.buttonHeld(0, buttonSource)){
+    robotState.setNextShot(5);
+  }
+  else{
+    robotState.setNextShot(0);
+  }
+
+  // execute
+  if(AlfredoConnect.buttonHeld(0, buttonExecute)){
+    if(robotState.getNextShot() == 1){ // amp
+      shooter.ampShot();
+      delay(5);
+      intake.runUntilEmpty();
+    }
+    else if(robotState.getNextShot() == 2){ // subwoofer
+      shooter.subShot();
+      delay(5);
+      intake.runUntilEmpty();
+    }
+    else if(robotState.getNextShot() == 3){ // podium
+      shooter.podiumShot();
+      delay(5);
+      intake.runUntilEmpty();
+    }
+    else if(robotState.getNextShot() == 4){ // pass
+      shooter.passingShot();
+      delay(5);
+      intake.runUntilEmpty();
+    }
+  }
+
+  if(AlfredoConnect.buttonHeld(0, buttonClimb)){
+    climber.deploy();
+  }
+  else{
+    climber.stow();
   }
 
   if(AlfredoConnect.keyHeld(Key::T)){
     drivetrain.TurnToAngle(90);
   }
 
+  // enable / disable
   if(AlfredoConnect.keyHeld(Key::Enter)){
-    drivetrain.cancelAuto();
+    robotState.setEnable(!robotState.isEnabled());
   }
-
 
 
 }

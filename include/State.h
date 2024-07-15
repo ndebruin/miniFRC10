@@ -37,13 +37,39 @@ class State
             enabled = Enabled;
         }
 
-    private:
 
+        // 0 - stop
+        // 1 - amp
+        // 2 - subwoofer
+        // 3 - podium
+        // 4 - passing
+        // 5 - intake
+        uint8_t getNextShot(){
+            return nextShot;
+        }
+
+        // 0 - stop
+        // 1 - amp
+        // 2 - subwoofer
+        // 3 - podium
+        // 4 - passing
+        // 5 - intake
+        void setNextShot(uint8_t NextShot){
+            nextShot = NextShot;
+        }
+
+    private:
 
         bool enabled;
         bool note;
         bool blue;
 
+        // 0 - stop
+        // 1 - amp
+        // 2 - subwoofer
+        // 3 - podium
+        // 4 - passing
+        // 5 - intake
         uint8_t nextShot;
 
 

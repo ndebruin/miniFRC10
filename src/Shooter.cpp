@@ -12,11 +12,13 @@ uint8_t Shooter::begin(){
 }
 
 uint8_t Shooter::update(){
-    if(topMotor->getOutput() != topSetPower){
-        topMotor->set(topSetPower);
-    }
-    if(bottomMotor->getOutput() != bottomSetPower){
-        bottomMotor->set(bottomSetPower);
+    if(robotState->isEnabled()){
+        if(topMotor->getOutput() != topSetPower){
+            topMotor->set(topSetPower);
+        }
+        if(bottomMotor->getOutput() != bottomSetPower){
+            bottomMotor->set(bottomSetPower);
+        }
     }
 
     // if we are shooting
@@ -28,6 +30,8 @@ uint8_t Shooter::update(){
         }
         if(timerStarted && millis()-time > shooterDelay*1000){
             stop();
+            timerStarted = false;
+            return 1;
         }
     }
 
