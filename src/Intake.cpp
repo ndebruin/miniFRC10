@@ -5,17 +5,17 @@ Intake::Intake(NoU_Motor* IntakeMotor, VL53L0X* tofSensor, State* state) : intak
 { }
 
 uint8_t Intake::begin(){
-    intakeMotor->setInverted(false);
+    intakeMotor->setInverted(true);
 
-    Wire.begin();
+    // Wire.begin();
 
-    sensor->setTimeout(500);
-    if(!sensor->init()){
-        return 1;
-    }
+    // sensor->setTimeout(500);
+    // if(!sensor->init()){
+    //     return 1;
+    // }
     
-    // reduce timing budget to 20ms per measurement for higher speed readings
-    sensor->setMeasurementTimingBudget(20000);
+    // // reduce timing budget to 20ms per measurement for higher speed readings
+    // sensor->setMeasurementTimingBudget(20000);
 
     stop();
 
@@ -47,7 +47,8 @@ uint8_t Intake::update(){
 }
 
 uint16_t Intake::getRange(){
-    return sensor->readRangeSingleMillimeters();
+    // return sensor->readRangeSingleMillimeters();
+    return 50;
 }
 
 uint8_t Intake::getMode(){

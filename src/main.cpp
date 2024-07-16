@@ -70,12 +70,13 @@ void setup() {
 
   // start RSL
   pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
 
   // start subsystems
   uint8_t error_Drivetrain = drivetrain.begin();
   uint8_t error_Intake = intake.begin();
   uint8_t error_Shooter = shooter.begin();
-  uint8_t error_Climber = climber.begin();
+  //uint8_t error_Climber = climber.begin();
 }
 
 
@@ -89,14 +90,8 @@ void loop() {
   uint8_t error_Drivetrain = drivetrain.update();
   uint8_t error_Intake = intake.update();
   uint8_t error_Shooter = shooter.update();
-  uint8_t error_Climber = climber.update();
+  //uint8_t error_Climber = climber.update();
 
-  if(error_Drivetrain != 1){
-    serialBluetooth.println("Theta Error: " + String(drivetrain.getThetaError()) + " AngZ_Out: " + String(drivetrain.getAngZOut()));
-  }
-  else{
-    serialBluetooth.println("done");
-  }
 
   if(error_Shooter == 1){ // shot finished
     intake.stop();
@@ -106,7 +101,9 @@ void loop() {
   // serialBluetooth.println("    Y Error: " + String(drivetrain.getYError()));
   
   float linY = deadzone(AlfredoConnect.getAxis(0, axisLinY));
-  float angZ = deadzone(AlfredoConnect.getAxis(0, axisAngZ));
+  float angZ = -deadzone(AlfredoConnect.getAxis(0, axisAngZ));
+
+  //serialBluetooth.println(angZ);
 
   drivetrain.ArcadeDrive(linY, angZ);
 
@@ -119,6 +116,7 @@ void loop() {
           && !AlfredoConnect.buttonHeld(0, buttonExecute))
   {
     intake.stop();
+    shooter.stop();
   }
 
   // queue system
@@ -135,33 +133,31 @@ void loop() {
     robotState.setNextShot(4);
   }
   else if(AlfredoConnect.buttonHeld(0, buttonSource)){
-    robotState.setNextShot(5);
+    shooter.intake();
+    // intake.runUntilEmpty();
+    intake.outtake();
   }
-  else{
-    robotState.setNextShot(0);
-  }
+
 
   // execute
   if(AlfredoConnect.buttonHeld(0, buttonExecute)){
     if(robotState.getNextShot() == 1){ // amp
       shooter.ampShot();
-      delay(5);
-      intake.runUntilEmpty();
+      // intake.runUntilEmpty();
     }
     else if(robotState.getNextShot() == 2){ // subwoofer
+      
+
       shooter.subShot();
-      delay(5);
-      intake.runUntilEmpty();
+      
     }
     else if(robotState.getNextShot() == 3){ // podium
       shooter.podiumShot();
-      delay(5);
-      intake.runUntilEmpty();
+
     }
     else if(robotState.getNextShot() == 4){ // pass
       shooter.passingShot();
-      delay(5);
-      intake.runUntilEmpty();
+
     }
   }
 
@@ -185,6 +181,12 @@ void loop() {
     robotState.setEnable(!robotState.isEnabled());
     digitalWrite(LED_BUILTIN, robotState.isEnabled());
   }
+
+  if(AlfredoConnect.keyHeld(Key::Space)){
+    drivetrain.cancelAuto();
+  }
+
+  serialBluetooth.println("Next shot: " + String(robotState.getNextShot()));
 
 
 }

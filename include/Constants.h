@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////// Drivetrain //////////////////////////////////////////////////////////////////////
 
-#define leftMotorChannel 4
+#define leftMotorChannel 1
 #define rightMotorChannel 2
 #define leftEncA 34
 #define leftEncB 35
@@ -42,29 +42,29 @@
 
 ////////////////////////////////////////////////////////////////////// Shooter //////////////////////////////////////////////////////////////////////
 
-#define topMotorChannel 3
-#define bottomMotorChannel 5
+#define topMotorChannel 4
+#define bottomMotorChannel 3
 
-#define shooterDelay 0.1
+#define shooterDelay 10
 
-#define AMP_Top_kS 0.0
-#define AMP_Bottom_kS 0.0
+#define AMP_Top_kS 0.7
+#define AMP_Bottom_kS 0.6
 
-#define SUBWOOFER_Top_kS 0.0
-#define SUBWOOFER_Bottom_kS 0.0
+#define SUBWOOFER_Top_kS 1.0
+#define SUBWOOFER_Bottom_kS 0.95
 
 #define PODIUM_Top_kS 0.0
 #define PODIUM_Bottom_kS 0.0
 
-#define PASS_Top_kS 0.0
-#define PASS_Bottom_kS 0.0
+#define PASS_Top_kS 1.0
+#define PASS_Bottom_kS 1.0
 
-#define INTAKE_Top_kS 0.0
-#define INTAKE_Bottom_kS 0.0
+#define INTAKE_Top_kS -0.8
+#define INTAKE_Bottom_kS -0.8
 
 ////////////////////////////////////////////////////////////////////// Indexer //////////////////////////////////////////////////////////////////////
 
-#define intakeMotorChannel 1
+#define intakeMotorChannel 5
 
 #define Intake_IN_kS 0.9
 #define Intake_SHOOT_kS 0.8
