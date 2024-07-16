@@ -64,11 +64,13 @@ class Drivetrain
 
         double angZ_powerOut;
 
-        // straight line data
-        int64_t currentY;
-        int64_t desiredY;
+        // theta PID controller
+        PID Y_Controller{&currentY, &linY_Out, &ySetpoint, linY_kP, linY_kI, linY_kD, DIRECT};
+        double ySetpoint = 0; // using encoder ticks
+        double currentY = 0;  // using encoder ticks
+        double linY_Out = 0;       // using (-1,1)
 
-        // 
+        double linY_powerOut;
         
 
         // chezy drive values

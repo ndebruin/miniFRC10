@@ -26,12 +26,12 @@ class Shooter
         uint8_t getMode();
 
         void stop();
-        void Shooter::run(double kS_Top, double kS_Bottom);
-        void Shooter::ampShot();
-        void Shooter::subShot();
-        void Shooter::podiumShot();
-        void Shooter::passingShot();
-        void Shooter::intake();
+        void run(double kS_Top, double kS_Bottom);
+        void ampShot();
+        void subShot();
+        void podiumShot();
+        void passingShot();
+        void intake();
 
 
     private:

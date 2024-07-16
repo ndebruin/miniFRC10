@@ -23,10 +23,7 @@
 
 ////////////////////////////////////////////////////////////////////// Function Declarations //////////////////////////////////////////////////////////////////////
 
-// function def
-
-
-
+double deadzone(double rawJoy);
 
 ////////////////////////////////////////////////////////////////////// Hardware Declarations //////////////////////////////////////////////////////////////////////
 
@@ -63,8 +60,7 @@ NoU_Servo rightClimber(rightClimberChannel);
 Climber climber = Climber(&leftClimber, &rightClimber, &robotState);
 
 
-////////////////////////////////////////////////////////////////////// Logic Declarations //////////////////////////////////////////////////////////////////////
-
+////////////////////////////////////////////////////////////////////// Variable Declarations //////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////// setup() //////////////////////////////////////////////////////////////////////
 void setup() {
@@ -80,8 +76,6 @@ void setup() {
   uint8_t error_Intake = intake.begin();
   uint8_t error_Shooter = shooter.begin();
   uint8_t error_Climber = climber.begin();
-
-
 }
 
 
@@ -111,8 +105,8 @@ void loop() {
   //serialBluetooth.print("\033c");
   // serialBluetooth.println("    Y Error: " + String(drivetrain.getYError()));
   
-  float linY = AlfredoConnect.getAxis(0, axisLinY);
-  float angZ = AlfredoConnect.getAxis(0, axisAngZ);
+  float linY = deadzone(AlfredoConnect.getAxis(0, axisLinY));
+  float angZ = deadzone(AlfredoConnect.getAxis(0, axisAngZ));
 
   drivetrain.ArcadeDrive(linY, angZ);
 
@@ -182,9 +176,14 @@ void loop() {
     drivetrain.TurnToAngle(90);
   }
 
+  if(AlfredoConnect.keyHeld(Key::U)){
+    drivetrain.LinearHeadingDrive(25.4*12);
+  }
+
   // enable / disable
   if(AlfredoConnect.keyHeld(Key::Enter)){
     robotState.setEnable(!robotState.isEnabled());
+    digitalWrite(LED_BUILTIN, robotState.isEnabled());
   }
 
 
@@ -192,8 +191,8 @@ void loop() {
 ////////////////////////////////////////////////////////////////////// Function Code //////////////////////////////////////////////////////////////////////
  
 // joystick deadzone
-double deadzone(double deadZoneVal, double rawJoy){
-  if(fabs(rawJoy) < deadZoneVal){
+double deadzone(double rawJoy){
+  if(fabs(rawJoy) < deadzoneValue){
     return 0.0;
   }
   return rawJoy;

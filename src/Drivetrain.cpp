@@ -30,33 +30,37 @@ int8_t Drivetrain::updateIMU(){
 uint8_t Drivetrain::update(){
     // update our yaw coordinate 
     current_Theta = imu->getYaw();
+    // find the mean of the two encoders (to account for turning actions)
+    currentY = (leftEncoder.getCount() + rightEncoder.getCount()) / 2;
 
     // if we're in an open loop mode, we can't run the PID controllers.
     if(driveMode == 0){
         theta_Controller.SetMode(MANUAL);
+        Y_Controller.SetMode(MANUAL);
     }
 
     // linear heading
     if(driveMode == 1){
-        // find the median of the two encoders (to account for turning actions)
-        // currentY = (leftEncoder.getCount() + rightEncoder.getCount()) / 2;
-
-        if(abs(theta_Setpoint-current_Theta) < y_ErrorThreshold){
+        if(abs(theta_Setpoint-current_Theta) < theta_ErrorThreshold && abs(ySetpoint - currentY) < y_ErrorThreshold){
             cancelAuto();
             return 1;
         }
 
         theta_Controller.Compute();
-        
-        int direction = -1;
+        int AngZdirection = -1;
         if(current_Theta > theta_Setpoint){
-            direction = 1;
+            AngZdirection = 1;
         }
+        angZ_powerOut = AngZdirection*(angZ_TURN_kS + abs(angZ_Out));
 
-        angZ_powerOut = direction*(angZ_TURN_kS + abs(angZ_Out));
+        Y_Controller.Compute();
+        int linYdirection = -1;
+        if(currentY > ySetpoint){
+            linYdirection = 1;
+        }
+        linY_powerOut = linYdirection*(angZ_TURN_kS + abs(angZ_Out));
 
-        ArcadeDrive(0, angZ_powerOut);
-
+        ArcadeDrive(linY_powerOut, angZ_powerOut);
     }
 
 
@@ -68,8 +72,6 @@ uint8_t Drivetrain::update(){
         }
 
         theta_Controller.Compute();
-        
-
         
         int direction = -1;
         if(current_Theta > theta_Setpoint){
@@ -185,7 +187,7 @@ void Drivetrain::LinearHeadingDrive(double mm, double theta)
 
     theta_Setpoint = theta;
 
-    //ySetpoint = mm/mmPerTick;
+    ySetpoint = mm/mmPerTick;
 
     // setup heading correction control loop
     theta_Controller.SetTunings(angZ_LINEAR_kP, angZ_LINEAR_kI, angZ_LINEAR_kD);
@@ -194,10 +196,10 @@ void Drivetrain::LinearHeadingDrive(double mm, double theta)
     theta_Controller.SetMode(AUTOMATIC);
 
     // setup distance control loop
-    /*y_Controller.SetTunings(linY_kP, linY_kI, linY_kD);
-    y_Controller.SetOutputLimits(-1.0,1.0);
-    y_Controller.Compute();
-    y_Controller.SetMode(AUTOMATIC);*/
+    Y_Controller.SetTunings(linY_kP, linY_kI, linY_kD);
+    Y_Controller.SetOutputLimits(-1.0,1.0);
+    Y_Controller.Compute();
+    Y_Controller.SetMode(AUTOMATIC);
 }
 
 // turn to angle. 
