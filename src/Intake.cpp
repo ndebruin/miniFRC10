@@ -1,21 +1,12 @@
 #include <Arduino.h>
 #include "Intake.h"
 
-Intake::Intake(NoU_Motor* IntakeMotor, VL53L0X* tofSensor, State* state) : intakeMotor(IntakeMotor), sensor(tofSensor), robotState(state)
+Intake::Intake(NoU_Motor* IntakeMotor, State* state) : intakeMotor(IntakeMotor), robotState(state)
 { }
 
 uint8_t Intake::begin(){
     intakeMotor->setInverted(true);
 
-    // Wire.begin();
-
-    // sensor->setTimeout(500);
-    // if(!sensor->init()){
-    //     return 1;
-    // }
-    
-    // // reduce timing budget to 20ms per measurement for higher speed readings
-    // sensor->setMeasurementTimingBudget(20000);
 
     stop();
 
@@ -30,14 +21,14 @@ uint8_t Intake::update(){
     }
 
     if(intakeMode == 2){
-        if(hasNote()){
+        if(robotState->hasNote()){
             stop();
             return 1;
         }
     }
 
     if(intakeMode == 3){
-        if(!hasNote()){
+        if(!robotState->hasNote()){
             stop();
             return 1;
         }
@@ -46,23 +37,8 @@ uint8_t Intake::update(){
     return 0;
 }
 
-uint16_t Intake::getRange(){
-    // return sensor->readRangeSingleMillimeters();
-    return 50;
-}
-
 uint8_t Intake::getMode(){
     return intakeMode;
-}
-
-// this will likely have to be tuned / rewritten
-bool Intake::hasNote(){
-    if(getRange() < Distance_EMPTY){
-        robotState->setNote(true);
-        return true;
-    }
-    robotState->setNote(false);
-    return false;
 }
 
 void Intake::stop(){

@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include "Drivetrain.h"
 
-Drivetrain::Drivetrain(NoU_Motor* LeftMotor, NoU_Motor* RightMotor, IMU* IMU, State* state) 
-                                    : leftMotor(LeftMotor), rightMotor(RightMotor), imu(IMU), robotState(state)
+Drivetrain::Drivetrain(NoU_Motor* LeftMotor, NoU_Motor* RightMotor, State* state) 
+                                    : leftMotor(LeftMotor), rightMotor(RightMotor), robotState(state)
 { 
     //theta_Controller.SetSampleTime(50);
 }
@@ -15,52 +15,81 @@ uint8_t Drivetrain::begin(){
     leftMotor->setInverted(false);
     rightMotor->setInverted(true);
 
-    leftEncoder.attachHalfQuad(leftEncA, leftEncB);
-    rightEncoder.attachHalfQuad(rightEncA, rightEncB);
-    leftEncoder.setCount(0);
-    rightEncoder.setCount(0);
-
-    return imu->begin();
-}
-int8_t Drivetrain::updateIMU(){
-    return imu->read();
+    return 0;
+    
 }
 
 // this should be run as fast as possible to allow for constant updates to yaw and control loops
 uint8_t Drivetrain::update(){
-    // update our yaw coordinate 
-    current_Theta = imu->getYaw();
-    // find the mean of the two encoders (to account for turning actions)
-    currentY = (leftEncoder.getCount() + rightEncoder.getCount()) / 2;
+    
+    // if in closed loop control
+    if(driveMode > 0){
+        // update our yaw coordinate 
+        current_Theta = robotState->getYaw();
+        // find the mean of the two encoders (to account for turning actions)
+        currentLeft = robotState->getLeftCount();
+        currentRight = robotState->getRightCount();
+    }
 
     // if we're in an open loop mode, we can't run the PID controllers.
     if(driveMode == 0){
         theta_Controller.SetMode(MANUAL);
-        Y_Controller.SetMode(MANUAL);
+        left_Controller.SetMode(MANUAL);
+        right_Controller.SetMode(MANUAL);
     }
 
     // linear heading
     if(driveMode == 1){
-        if(abs(theta_Setpoint-current_Theta) < theta_ErrorThreshold && abs(ySetpoint - currentY) < y_ErrorThreshold){
+        if(abs(ySetpoint-currentLeft) < y_ErrorThreshold && abs(ySetpoint-currentRight) < y_ErrorThreshold){
             cancelAuto();
             return 1;
         }
+        left_Controller.Compute();
+        right_Controller.Compute();
 
-        theta_Controller.Compute();
-        int AngZdirection = -1;
-        if(current_Theta > theta_Setpoint){
-            AngZdirection = 1;
+        int leftDirection = 1;
+        if(currentLeft > ySetpoint){
+            leftDirection = -1;
         }
-        angZ_powerOut = AngZdirection*(angZ_TURN_kS + abs(angZ_Out));
+        left_powerOut = leftDirection*(linY_kS + abs(left_Out));
 
-        Y_Controller.Compute();
-        int linYdirection = -1;
-        if(currentY > ySetpoint){
-            linYdirection = 1;
+        int rightDirection = 1;
+        if(currentRight > ySetpoint){
+            rightDirection = -1;
         }
-        linY_powerOut = linYdirection*(angZ_TURN_kS + abs(angZ_Out));
+        right_powerOut = rightDirection*(linY_kS + abs(right_Out));
 
-        ArcadeDrive(linY_powerOut, angZ_powerOut);
+        if(robotState->isEnabled()){
+            leftMotor->set(left_powerOut);
+            rightMotor->set(right_powerOut);
+        }
+    }
+
+    // linear heading until intake
+    if(driveMode == 4){
+        if(robotState->hasNote() || (abs(ySetpoint-currentLeft) < y_ErrorThreshold && abs(ySetpoint-currentRight) < y_ErrorThreshold)){
+            cancelAuto();
+            return 1;
+        }
+        left_Controller.Compute();
+        right_Controller.Compute();
+
+        int leftDirection = 1;
+        if(currentLeft > ySetpoint){
+            leftDirection = -1;
+        }
+        left_powerOut = leftDirection*(linY_kS + abs(left_Out));
+
+        int rightDirection = 1;
+        if(currentRight > ySetpoint){
+            rightDirection = -1;
+        }
+        right_powerOut = rightDirection*(linY_kS + abs(right_Out));
+
+        if(robotState->isEnabled()){
+            leftMotor->set(left_powerOut);
+            rightMotor->set(right_powerOut);
+        }
     }
 
 
@@ -73,9 +102,9 @@ uint8_t Drivetrain::update(){
 
         theta_Controller.Compute();
         
-        int direction = -1;
+        int direction = 1;
         if(current_Theta > theta_Setpoint){
-            direction = 1;
+            direction = -1;
         }
 
         angZ_powerOut = direction*(angZ_TURN_kS + abs(angZ_Out));
@@ -103,12 +132,12 @@ void Drivetrain::ArcadeDrive(double linY, double angZ)
         }
     } else {
         if (angZ > 0) {
-            leftPower = maxInput;
-            rightPower = linY + angZ;
+            leftPower = linY + angZ;
+            rightPower = maxInput;
         }
         else {
-            leftPower = linY - angZ;
-            rightPower = maxInput;
+            leftPower = maxInput;
+            rightPower = linY - angZ;
         }
     }
     if(robotState->isEnabled()){
@@ -172,34 +201,43 @@ void Drivetrain::ChezyDrive(double linY, double angZ, boolean isQuickTurn)
     }
 }
 
-// drive in the current direction with heading correction 
-// (this functionally overloads to theta = current_Theta)
+// drive in the current direction with heading correction (kinda)
 void Drivetrain::LinearHeadingDrive(double mm){
-    LinearHeadingDrive(mm, current_Theta);
-}
-
-// drive in a direction with heading correction
-void Drivetrain::LinearHeadingDrive(double mm, double theta)
-{
     driveMode = 1;
 
     resetEncoders();
 
-    theta_Setpoint = theta;
-
-    ySetpoint = mm/mmPerTick;
-
-    // setup heading correction control loop
-    theta_Controller.SetTunings(angZ_LINEAR_kP, angZ_LINEAR_kI, angZ_LINEAR_kD);
-    theta_Controller.SetOutputLimits(-angZ_LINEAR_LIMIT,angZ_LINEAR_LIMIT);
-    theta_Controller.Compute();
-    theta_Controller.SetMode(AUTOMATIC);
+    ySetpoint = mm*mmPerTick;
 
     // setup distance control loop
-    Y_Controller.SetTunings(linY_kP, linY_kI, linY_kD);
-    Y_Controller.SetOutputLimits(-1.0,1.0);
-    Y_Controller.Compute();
-    Y_Controller.SetMode(AUTOMATIC);
+    left_Controller.SetTunings(linY_kP, linY_kI, linY_kD);
+    right_Controller.SetTunings(linY_kP, linY_kI, linY_kD);
+    left_Controller.SetOutputLimits(-linY_LIMIT,linY_LIMIT);
+    right_Controller.SetOutputLimits(-linY_LIMIT,linY_LIMIT);
+    left_Controller.Compute();
+    right_Controller.Compute();
+    left_Controller.SetMode(AUTOMATIC);
+    right_Controller.SetMode(AUTOMATIC);
+    
+}
+
+void Drivetrain::LinearHeadingDriveUntilIntake(double mm){
+    driveMode = 4;
+
+    resetEncoders();
+
+    ySetpoint = mm*mmPerTick;
+
+    // setup distance control loop
+    left_Controller.SetTunings(linY_kP, linY_kI, linY_kD);
+    right_Controller.SetTunings(linY_kP, linY_kI, linY_kD);
+    left_Controller.SetOutputLimits(-linY_LIMIT,linY_LIMIT);
+    right_Controller.SetOutputLimits(-linY_LIMIT,linY_LIMIT);
+    left_Controller.Compute();
+    right_Controller.Compute();
+    left_Controller.SetMode(AUTOMATIC);
+    right_Controller.SetMode(AUTOMATIC);
+    
 }
 
 // turn to angle. 

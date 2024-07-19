@@ -37,7 +37,6 @@ class State
             enabled = Enabled;
         }
 
-
         // 0 - stop
         // 1 - amp
         // 2 - subwoofer
@@ -58,9 +57,40 @@ class State
             nextShot = NextShot;
         }
 
+
+        long getLeftCount(){
+            return leftCount-leftOffset;
+        }
+        long getRightCount(){
+            return rightCount-rightOffset;
+        }
+
+        void setEncoderCounts(long left, long right){
+            leftCount = left;
+            rightCount = right;
+        }
+
+        void zeroEncoders(){
+            leftOffset = leftCount;
+            rightOffset = rightCount;
+        }
+
+        double getYaw(){
+            return yaw-yawOffset;
+        }
+
+        void setYaw(double Yaw){
+            yaw = Yaw;
+        }
+
+        void zeroYaw(){
+            yawOffset = yaw;
+        }
+
+
     private:
 
-        bool enabled;
+        bool enabled =true;
         bool note;
         bool blue;
 
@@ -72,7 +102,15 @@ class State
         // 5 - intake
         uint8_t nextShot;
 
+        double yaw;
+        double yawOffset;
 
+        long leftCount;
+        long leftOffset;
+        long rightCount;
+        long rightOffset;
+
+        
 };
 
 #endif

@@ -3,8 +3,6 @@
 
 #include <Arduino.h>
 #include <Alfredo_NoU2.h>
-#include <VL53L0X.h>
-#include <Wire.h>
 
 #include "State.h"
 
@@ -13,7 +11,7 @@
 class Intake
 {
     public:
-        Intake(NoU_Motor* IntakeMotor, VL53L0X* tofSensor, State* state);
+        Intake(NoU_Motor* IntakeMotor, State* state);
         uint8_t begin();
         uint8_t update();
 
@@ -31,7 +29,6 @@ class Intake
         bool hasNote();
     private:
         NoU_Motor* intakeMotor;
-        VL53L0X* sensor;
 
         State* robotState;
 

@@ -6,7 +6,7 @@ Shooter::Shooter(NoU_Motor* TopMotor, NoU_Motor* BottomMotor, State* state) : to
 
 uint8_t Shooter::begin(){
     topMotor->setInverted(false);
-    bottomMotor->setInverted(false);
+    bottomMotor->setInverted(true);
 
     return 0;
 }

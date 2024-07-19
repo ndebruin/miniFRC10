@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////// Drivetrain //////////////////////////////////////////////////////////////////////
 
-#define leftMotorChannel 1
-#define rightMotorChannel 2
+#define leftMotorChannel 4
+#define rightMotorChannel 6
 #define leftEncA 34
 #define leftEncB 35
 #define rightEncA 36
@@ -9,49 +9,44 @@
 
 
 #define angZ_TURN_kS 0.6
-#define angZ_TURN_kP 0.001
-#define angZ_TURN_kI 0.00
-#define angZ_TURN_kD 0.005
+#define angZ_TURN_kP 0.1
+#define angZ_TURN_kI 0.0
+#define angZ_TURN_kD 0.05
 
-#define angZ_TURN_LIMIT 0.3
-
-#define angZ_LINEAR_kS 0
-#define angZ_LINEAR_kP 0
-#define angZ_LINEAR_kI 0
-#define angZ_LINEAR_kD 0
-
-#define angZ_LINEAR_LIMIT 0.4
+#define angZ_TURN_LIMIT 0.4
 
 // in degrees
-#define theta_ErrorThreshold 0.5
+#define theta_ErrorThreshold 2
 
-#define linY_kS 0.0
+#define linY_kS 0.6
 
-#define linY_kP 0.0
+#define linY_kP 0.1
 #define linY_kI 0.0
 #define linY_kD 0.0
 
+#define linY_LIMIT 0.5
+
 // in mm
-#define y_ErrorThreshold 0.5 * mmPerTick
+#define y_ErrorThreshold 5
 
 // diamater * pi / ticks per rev
 // divide to convert mm -> tick
 // multiply to convert tick -> mm
-#define mmPerTick 67.0 * 3.14159 / 40.0
+#define mmPerTick 200/711.2
 
 
 ////////////////////////////////////////////////////////////////////// Shooter //////////////////////////////////////////////////////////////////////
 
-#define topMotorChannel 4
+#define topMotorChannel 2
 #define bottomMotorChannel 3
 
 #define shooterDelay 10
 
-#define AMP_Top_kS 0.7
-#define AMP_Bottom_kS 0.6
+#define AMP_Top_kS 0.75
+#define AMP_Bottom_kS 0.64
 
 #define SUBWOOFER_Top_kS 1.0
-#define SUBWOOFER_Bottom_kS 0.95
+#define SUBWOOFER_Bottom_kS 1.0
 
 #define PODIUM_Top_kS 0.0
 #define PODIUM_Bottom_kS 0.0
@@ -66,22 +61,22 @@
 
 #define intakeMotorChannel 5
 
-#define Intake_IN_kS 0.9
-#define Intake_SHOOT_kS 0.8
+#define Intake_IN_kS 1.0
+#define Intake_SHOOT_kS 1.0
 
-#define Distance_EMPTY 20
-#define Distance_NOTE 10
+#define Distance_EMPTY 64
+#define Distance_NOTE 
 
 ////////////////////////////////////////////////////////////////////// Climber //////////////////////////////////////////////////////////////////////
 
-#define leftClimberChannel 1
-#define rightClimberChannel 2
+#define climberChannel 1
+#define reactionClimberChannel 2
 
-#define leftStowAngle   150
-#define leftDeployAngle 15
+#define climberStowAngle   0
+#define climberDeployAngle 150
 
-#define rightStowAngle   15
-#define rightDeployAngle 150
+#define reactionStowAngle   0
+#define reactionDeployAngle 150
 
 ////////////////////////////////////////////////////////////////////// Controller //////////////////////////////////////////////////////////////////////
 
@@ -100,3 +95,5 @@
 #define buttonSource 4
 
 #define buttonClimb 5
+#define buttonDeployReaction 15
+#define buttonStowReaction 14

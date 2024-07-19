@@ -6,7 +6,6 @@
 #include <Alfredo_NoU2.h>
 #include <PID_v1.h>
 
-#include "IMU.h"
 #include "State.h"
 
 #include <Constants.h>
@@ -14,10 +13,9 @@
 class Drivetrain
 {
     public:
-        Drivetrain(NoU_Motor* LeftMotor, NoU_Motor* RightMotor, IMU* IMU, State* state);
+        Drivetrain(NoU_Motor* LeftMotor, NoU_Motor* RightMotor, State* state);
         uint8_t begin();
         uint8_t update();
-        int8_t updateIMU();
 
         uint8_t getMode();
 
@@ -29,10 +27,17 @@ class Drivetrain
             return theta_Setpoint - current_Theta;
         }
 
+        double getLeftError(){
+            return ySetpoint - currentLeft;
+        }
+        double getRightError(){
+            return ySetpoint - currentRight;
+        }
+
         void ArcadeDrive(double linY, double AngZ);
         void ChezyDrive(double linY, double AngZ, boolean isQuickTurn);
         void LinearHeadingDrive(double mm);
-        void LinearHeadingDrive(double mm, double theta);
+        void LinearHeadingDriveUntilIntake(double mm);
         void TurnToAngle(double theta);
         void ArcLengthDrive(double radius, double theta, bool right);
 
@@ -43,17 +48,15 @@ class Drivetrain
 
 
     private:
-        ESP32Encoder leftEncoder;
-        ESP32Encoder rightEncoder;
         NoU_Motor* leftMotor;
         NoU_Motor* rightMotor;
-        IMU* imu;    
         State* robotState;    
         
         // 0 - open loop
         // 1 - linear drive with heading correction
         // 2 - turn to angle
         // 3 - curve drive along an arc
+        // 4 - linear until intake
         uint8_t driveMode;      
 
         // theta PID controller
@@ -61,16 +64,20 @@ class Drivetrain
         double theta_Setpoint = 0; // using (-180,180)
         double current_Theta = 0;  // using (-180,180)
         double angZ_Out = 0;       // using (-1,1)
+        double angZ_powerOut;      // using (-1,1)
 
-        double angZ_powerOut;
 
-        // theta PID controller
-        PID Y_Controller{&currentY, &linY_Out, &ySetpoint, linY_kP, linY_kI, linY_kD, DIRECT};
-        double ySetpoint = 0; // using encoder ticks
-        double currentY = 0;  // using encoder ticks
-        double linY_Out = 0;       // using (-1,1)
+        double ySetpoint = 0;      // using encoder ticks
+        // left/right PID controllers
+        PID left_Controller{&currentLeft, &left_Out, &ySetpoint, linY_kP, linY_kI, linY_kD, DIRECT};
+        double currentLeft = 0;    // using encoder ticks
+        double left_Out = 0;       // using (-1,1)
+        double left_powerOut;      // using (-1,1)
 
-        double linY_powerOut;
+        PID right_Controller{&currentRight, &right_Out, &ySetpoint, linY_kP, linY_kI, linY_kD, DIRECT};
+        double currentRight = 0;    // using encoder ticks
+        double right_Out = 0;       // using (-1,1)
+        double right_powerOut;      // using (-1,1)
         
 
         // chezy drive values
@@ -79,9 +86,9 @@ class Drivetrain
         float quickStopAccumulator;
 
         void resetEncoders(){
-            currentY = 0;
-            leftEncoder.setCount(0);
-            rightEncoder.setCount(0);
+            currentLeft = 0;
+            currentRight = 0;
+            robotState->zeroEncoders();
         }
 };
 

@@ -1,27 +1,24 @@
 #include <Arduino.h>
 #include "Climber.h"
 
-Climber::Climber(NoU_Servo* LeftClimber, NoU_Servo* RightClimber, State* state) : leftServo(LeftClimber), rightServo(RightClimber), robotState(state)
+#include "Constants.h"
+
+Climber::Climber(NoU_Servo* ClimberServo, NoU_Servo* ReactionClimber, State* state) : climberServo(ClimberServo), reactionServo(ReactionClimber), robotState(state)
 { }
 
 uint8_t Climber::begin(){
-    leftServo->write(leftStowAngle);
-    rightServo->write(rightStowAngle);
+    climberServo->write(climberStowAngle);
+    reactionServo->write(reactionStowAngle);
 
     return 0;
 }
 
 uint8_t Climber::update(){
-    if(leftServo->getDegrees() != leftSetAngle){
-        leftServo->write(leftSetAngle);
+    if(climberServo->getDegrees() != climberSetAngle){
+        climberServo->write(climberSetAngle);
     }
-    if(rightServo->getDegrees() != rightSetAngle){
-        rightServo->write(rightSetAngle);
-    }
-
-    if(!robotState->isEnabled()){
-        leftServo->write(leftStowAngle);
-        rightServo->write(rightStowAngle);
+    if(reactionServo->getDegrees() != reactionSetAngle){
+        reactionServo->write(reactionSetAngle);
     }
 
     return 0;
@@ -31,21 +28,29 @@ uint8_t Climber::getMode(){
     return climberMode;
 }
 
-void Climber::stow(){
+void Climber::stowClimber(){
     climberMode = 0;
-    leftSetAngle = leftStowAngle;
-    rightSetAngle = rightStowAngle;
+    climberServo->write(climberStowAngle);
 }
 
-void Climber::deploy(){
+void Climber::deployClimber(){
     climberMode = 1;
-    leftSetAngle = leftDeployAngle;
-    rightSetAngle = rightDeployAngle;
+    climberServo->write(climberDeployAngle);
 }
 
-void Climber::set(double leftAngle, double rightAngle){
+void Climber::stowReaction(){
+    climberMode = 0;
+    reactionServo->write(reactionStowAngle);
+}
+
+void Climber::deployReaction(){
+    climberMode = 1;
+    reactionServo->write(reactionDeployAngle);
+}
+
+void Climber::set(double climberAngle, double reactionAngle){
     climberMode = 2;
-    leftSetAngle = leftAngle;
-    rightSetAngle = rightAngle;
+    climberServo->write(climberAngle);
+    reactionServo->write(reactionAngle);
 }
 

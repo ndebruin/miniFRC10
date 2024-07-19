@@ -11,7 +11,7 @@
 class Climber
 {
     public:
-        Climber(NoU_Servo* LeftClimber, NoU_Servo* RightClimber, State* state);
+        Climber(NoU_Servo* climberServo, NoU_Servo* ReactionClimber, State* state);
         uint8_t begin();
         uint8_t update();
 
@@ -20,20 +20,22 @@ class Climber
         // 1 - Deploy
         uint8_t getMode();
 
-        void stow();
-        void deploy();
+        void stowClimber();
+        void deployClimber();
+        void stowReaction();
+        void deployReaction();
 
         void set(double leftAngle, double rightAngle);
 
 
     private:
-        NoU_Servo* leftServo;
-        NoU_Servo* rightServo;
+        NoU_Servo* climberServo;
+        NoU_Servo* reactionServo;
 
         State* robotState;
 
-        double leftSetAngle;
-        double rightSetAngle;
+        double climberSetAngle;
+        double reactionSetAngle;
 
         // 0 - Stow
         // 1 - Deploy
