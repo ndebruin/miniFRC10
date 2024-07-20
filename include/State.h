@@ -87,12 +87,32 @@ class State
             yawOffset = yaw;
         }
 
+        void setAuto(){
+            inAuto = true;
+        }
+
+        void setTeleop(){
+            inAuto = false;
+        }
+
+        bool robotMode(){
+            return inAuto;
+        }
+
+
+
+        
+
 
     private:
 
-        bool enabled =true;
+        bool enabled =false;
         bool note;
         bool blue;
+
+        bool inAuto = false;
+
+        
 
         // 0 - stop
         // 1 - amp

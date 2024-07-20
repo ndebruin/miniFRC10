@@ -34,61 +34,57 @@ uint8_t Drivetrain::update(){
     // if we're in an open loop mode, we can't run the PID controllers.
     if(driveMode == 0){
         theta_Controller.SetMode(MANUAL);
-        left_Controller.SetMode(MANUAL);
-        right_Controller.SetMode(MANUAL);
     }
 
     // linear heading
-    if(driveMode == 1){
-        if(abs(ySetpoint-currentLeft) < y_ErrorThreshold && abs(ySetpoint-currentRight) < y_ErrorThreshold){
-            cancelAuto();
-            return 1;
-        }
-        left_Controller.Compute();
-        right_Controller.Compute();
-
-        int leftDirection = 1;
-        if(currentLeft > ySetpoint){
-            leftDirection = -1;
-        }
-        left_powerOut = leftDirection*(linY_kS + abs(left_Out));
-
-        int rightDirection = 1;
-        if(currentRight > ySetpoint){
-            rightDirection = -1;
-        }
-        right_powerOut = rightDirection*(linY_kS + abs(right_Out));
+    if(driveMode == 1){        
+        
+        double powerOut = direction*linY_kS;
 
         if(robotState->isEnabled()){
-            leftMotor->set(left_powerOut);
-            rightMotor->set(right_powerOut);
+            leftMotor->set(powerOut);
+            rightMotor->set(powerOut);
+        }
+
+        if(direction > 0){
+            if(currentLeft > ySetpoint){
+                cancelAuto();
+                return 1;
+            }
+        }
+        else{
+            if(currentLeft < ySetpoint){
+                cancelAuto();
+                return 1;
+            }
         }
     }
 
     // linear heading until intake
     if(driveMode == 4){
-        if(robotState->hasNote() || (abs(ySetpoint-currentLeft) < y_ErrorThreshold && abs(ySetpoint-currentRight) < y_ErrorThreshold)){
+        double powerOut = direction*linY_kS;
+
+        if(robotState->isEnabled()){
+            leftMotor->set(powerOut);
+            rightMotor->set(powerOut);
+        }
+
+        if(robotState->hasNote()){
             cancelAuto();
             return 1;
         }
-        left_Controller.Compute();
-        right_Controller.Compute();
 
-        int leftDirection = 1;
-        if(currentLeft > ySetpoint){
-            leftDirection = -1;
+        if(direction > 0){
+            if(currentLeft > ySetpoint){
+                cancelAuto();
+                return 1;
+            }
         }
-        left_powerOut = leftDirection*(linY_kS + abs(left_Out));
-
-        int rightDirection = 1;
-        if(currentRight > ySetpoint){
-            rightDirection = -1;
-        }
-        right_powerOut = rightDirection*(linY_kS + abs(right_Out));
-
-        if(robotState->isEnabled()){
-            leftMotor->set(left_powerOut);
-            rightMotor->set(right_powerOut);
+        else{
+            if(currentLeft < ySetpoint){
+                cancelAuto();
+                return 1;
+            }
         }
     }
 
@@ -209,16 +205,10 @@ void Drivetrain::LinearHeadingDrive(double mm){
 
     ySetpoint = mm*mmPerTick;
 
-    // setup distance control loop
-    left_Controller.SetTunings(linY_kP, linY_kI, linY_kD);
-    right_Controller.SetTunings(linY_kP, linY_kI, linY_kD);
-    left_Controller.SetOutputLimits(-linY_LIMIT,linY_LIMIT);
-    right_Controller.SetOutputLimits(-linY_LIMIT,linY_LIMIT);
-    left_Controller.Compute();
-    right_Controller.Compute();
-    left_Controller.SetMode(AUTOMATIC);
-    right_Controller.SetMode(AUTOMATIC);
-    
+    direction = 1;
+    if(currentLeft > ySetpoint){
+        direction = -1;
+    }
 }
 
 void Drivetrain::LinearHeadingDriveUntilIntake(double mm){
@@ -227,17 +217,11 @@ void Drivetrain::LinearHeadingDriveUntilIntake(double mm){
     resetEncoders();
 
     ySetpoint = mm*mmPerTick;
-
-    // setup distance control loop
-    left_Controller.SetTunings(linY_kP, linY_kI, linY_kD);
-    right_Controller.SetTunings(linY_kP, linY_kI, linY_kD);
-    left_Controller.SetOutputLimits(-linY_LIMIT,linY_LIMIT);
-    right_Controller.SetOutputLimits(-linY_LIMIT,linY_LIMIT);
-    left_Controller.Compute();
-    right_Controller.Compute();
-    left_Controller.SetMode(AUTOMATIC);
-    right_Controller.SetMode(AUTOMATIC);
     
+    direction = 1;
+    if(currentLeft > ySetpoint){
+        direction = -1;
+    }
 }
 
 // turn to angle. 

@@ -58,11 +58,16 @@ void setup() {
   serialBluetooth.begin(robotName);
   AlfredoConnect.begin(serialBluetooth, true); // providing true means we won't get annoying errors regarding lack of joystick data
 
-  //Serial.begin(9600);
+  Serial.begin(9600);
 
   // start RSL
   pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
+  digitalWrite(LED_BUILTIN, LOW);
+
+  pinMode(pinSensor, INPUT);
+  pinMode(feedbackLED, OUTPUT);
+
+
 
   // start subsystems
   uint8_t error_Drivetrain = drivetrain.begin();
@@ -71,10 +76,12 @@ void setup() {
   uint8_t error_Climber = climber.begin();
 }
 
-int tof = 1000;
+
 long leftCount = 0;
 long rightCount = 0;
 double yaw = 0;
+bool firstRun = true;
+bool hadNote = false;
 ////////////////////////////////////////////////////////////////////// loop() //////////////////////////////////////////////////////////////////////
 void loop() {
   // parse updates from driver station
@@ -87,17 +94,18 @@ void loop() {
 
 
   // get updates from teensy
-  // if(Serial.available() > 0){
-  //   leftCount = Serial.readStringUntil(',').toInt(); // left encoder
-  //   rightCount = Serial.readStringUntil(',').toInt(); // right  encoder
-  //   tof = Serial.readStringUntil(',').toInt();
-  //   yaw = Serial.readStringUntil('\n').toDouble();
-  // }
+  if(Serial.available() > 0){
+    leftCount = Serial.readStringUntil(',').toInt(); // left encoder
+    rightCount = Serial.readStringUntil(',').toInt(); // right  encoder
+    yaw = Serial.readStringUntil('\n').toDouble();
+  }
   robotState.setEncoderCounts(leftCount, rightCount);
   robotState.setYaw(yaw);
-  robotState.setNote(tof < Distance_EMPTY);
-  
-  
+  robotState.setNote(analogRead(pinSensor) > Distance_EMPTY);
+  digitalWrite(feedbackLED, robotState.hasNote());
+
+  // teleop controls
+  if(!robotState.robotMode()){
   float linY = -deadzone(AlfredoConnect.getAxis(0, axisLinY));
   float angZ = -deadzone(AlfredoConnect.getAxis(0, axisAngZ));
 
@@ -105,35 +113,48 @@ void loop() {
 
   // run intake
   if(AlfredoConnect.buttonHeld(0, buttonIntake)){
-    intake.run();
+    if(firstRun){
+      intake.run();
+      hadNote = robotState.hasNote();
+      firstRun = false;
+    }
+    else{
+      if(!hadNote && robotState.hasNote()){
+        intake.stop();
+      }
+    }
   }
   else if(AlfredoConnect.buttonHeld(0, buttonSource)){
     shooter.intake();
     intake.outtake();
+    firstRun = true;
   }
   else{
     intake.stop();
+    firstRun = true;
   }
 
   // queue system
   if(AlfredoConnect.buttonHeld(0, buttonAmp)){
     robotState.setNextShot(1);
+    serialBluetooth.println("AMP");
   }
   else if(AlfredoConnect.buttonHeld(0, buttonSub)){
     robotState.setNextShot(2);
+    serialBluetooth.println("SPEAKER");
   }
   // else if(AlfredoConnect.buttonHeld(0, buttonPodium)){
   //   robotState.setNextShot(3);
+  //   serialBluetooth.println("PODIUM");
   // }
   else if(AlfredoConnect.buttonHeld(0, buttonPass)){
     robotState.setNextShot(4);
+    serialBluetooth.println("PASS");
   }
-
-
-
   // execute
   if(AlfredoConnect.buttonHeld(0, buttonExecute)){
     if(robotState.getNextShot() == 1){ // amp
+      intake.run();
       shooter.ampShot();
     }
     else if(robotState.getNextShot() == 2){ // subwoofer
@@ -164,6 +185,7 @@ void loop() {
   if(AlfredoConnect.buttonHeld(0, buttonStowReaction)){
     climber.stowReaction();
   }
+  }
 
   if(AlfredoConnect.keyHeld(Key::T)){
     drivetrain.TurnToAngle(30);
@@ -173,11 +195,18 @@ void loop() {
   }
 
   if(AlfredoConnect.buttonHeld(0, 9)){
+    serialBluetooth.println(robotState.getYaw());
     robotState.zeroYaw();
   }
 
   if(AlfredoConnect.keyHeld(Key::U)){
-    drivetrain.LinearHeadingDrive(12*25.4);
+    intake.runUntilBreak();
+    drivetrain.LinearHeadingDriveUntilIntake(-12*25.4);
+    robotState.setAuto();
+  }
+
+  if(AlfredoConnect.keyHeld(Key::Q)){
+    robotState.setTeleop();
   }
 
   // enable / disable
@@ -195,8 +224,8 @@ void loop() {
     drivetrain.cancelAuto();
   }
 
-  serialBluetooth.println("Next shot: " + String(robotState.getNextShot()) + " " + String(drivetrain.getThetaError()) + " " + String(tof) + " " + String(robotState.hasNote()) + " "+ String(drivetrain.getLeftError()) + " " + String(drivetrain.getRightError()));
-
+  // serialBluetooth.println("Next shot: " + String(robotState.getNextShot()) + " " + String(drivetrain.getThetaError()) + " " + String(tof) + " " + String(robotState.hasNote()) + " "+ String(drivetrain.getLeftError()) + " " + String(drivetrain.getRightError()));
+  //serialBluetooth.println(robotState.hasNote());
 }
 ////////////////////////////////////////////////////////////////////// Function Code //////////////////////////////////////////////////////////////////////
  

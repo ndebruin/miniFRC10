@@ -18,7 +18,7 @@
 // in degrees
 #define theta_ErrorThreshold 2
 
-#define linY_kS 0.6
+#define linY_kS 0.8
 
 #define linY_kP 0.1
 #define linY_kI 0.0
@@ -42,11 +42,14 @@
 
 #define shooterDelay 10
 
-#define AMP_Top_kS 0.75
-#define AMP_Bottom_kS 0.64
+#define AMP_Top_kS 0.8
+#define AMP_Bottom_kS 0.8
+// #define AMP_Top_kS 0.75
+// #define AMP_Bottom_kS 0.64
+
 
 #define SUBWOOFER_Top_kS 1.0
-#define SUBWOOFER_Bottom_kS 1.0
+#define SUBWOOFER_Bottom_kS 0.9
 
 #define PODIUM_Top_kS 0.0
 #define PODIUM_Bottom_kS 0.0
@@ -54,8 +57,8 @@
 #define PASS_Top_kS 1.0
 #define PASS_Bottom_kS 1.0
 
-#define INTAKE_Top_kS -0.8
-#define INTAKE_Bottom_kS -0.8
+#define INTAKE_Top_kS -1.0
+#define INTAKE_Bottom_kS -1.0
 
 ////////////////////////////////////////////////////////////////////// Indexer //////////////////////////////////////////////////////////////////////
 
@@ -64,7 +67,10 @@
 #define Intake_IN_kS 1.0
 #define Intake_SHOOT_kS 1.0
 
-#define Distance_EMPTY 64
+#define pinSensor 4
+#define feedbackLED 5
+
+#define Distance_EMPTY 10
 #define Distance_NOTE 
 
 ////////////////////////////////////////////////////////////////////// Climber //////////////////////////////////////////////////////////////////////
@@ -72,11 +78,11 @@
 #define climberChannel 1
 #define reactionClimberChannel 2
 
-#define climberStowAngle   0
-#define climberDeployAngle 150
+#define climberStowAngle   160
+#define climberDeployAngle 80
 
 #define reactionStowAngle   0
-#define reactionDeployAngle 150
+#define reactionDeployAngle 145
 
 ////////////////////////////////////////////////////////////////////// Controller //////////////////////////////////////////////////////////////////////
 

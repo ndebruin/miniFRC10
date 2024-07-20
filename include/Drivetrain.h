@@ -68,16 +68,9 @@ class Drivetrain
 
 
         double ySetpoint = 0;      // using encoder ticks
-        // left/right PID controllers
-        PID left_Controller{&currentLeft, &left_Out, &ySetpoint, linY_kP, linY_kI, linY_kD, DIRECT};
         double currentLeft = 0;    // using encoder ticks
-        double left_Out = 0;       // using (-1,1)
-        double left_powerOut;      // using (-1,1)
-
-        PID right_Controller{&currentRight, &right_Out, &ySetpoint, linY_kP, linY_kI, linY_kD, DIRECT};
         double currentRight = 0;    // using encoder ticks
-        double right_Out = 0;       // using (-1,1)
-        double right_powerOut;      // using (-1,1)
+        int direction = 0;     // using (-1,1)
         
 
         // chezy drive values
