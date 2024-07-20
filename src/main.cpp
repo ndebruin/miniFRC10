@@ -13,6 +13,7 @@
 #include "Intake.h"
 #include "Shooter.h"
 #include "Climber.h"
+#include "Auton.h"
 
 #include "Constants.h"
 
@@ -49,6 +50,7 @@ NoU_Servo reactionClimber(reactionClimberChannel);
 
 Climber climber = Climber(&climberServo, &reactionClimber, &robotState);
 
+Auton auton = Auton(&drivetrain, &intake, &shooter, &robotState);
 
 ////////////////////////////////////////////////////////////////////// Variable Declarations //////////////////////////////////////////////////////////////////////
 
@@ -91,6 +93,7 @@ void loop() {
   uint8_t error_Drivetrain = drivetrain.update();
   uint8_t error_Intake = intake.update();
   uint8_t error_Shooter = shooter.update();
+  uint8_t error_Auton = auton.update();
 
 
   // get updates from teensy
@@ -106,113 +109,119 @@ void loop() {
 
   // teleop controls
   if(!robotState.robotMode()){
-  float linY = -deadzone(AlfredoConnect.getAxis(0, axisLinY));
-  float angZ = -deadzone(AlfredoConnect.getAxis(0, axisAngZ));
+    float linY = -deadzone(AlfredoConnect.getAxis(0, axisLinY));
+    float angZ = -deadzone(AlfredoConnect.getAxis(0, axisAngZ));
 
-  drivetrain.ArcadeDrive(linY, angZ);
+    drivetrain.ArcadeDrive(linY, angZ);
 
-  // run intake
-  if(AlfredoConnect.buttonHeld(0, buttonIntake)){
-    if(firstRun){
-      intake.run();
-      hadNote = robotState.hasNote();
-      firstRun = false;
-    }
-    else{
-      if(!hadNote && robotState.hasNote()){
-        intake.stop();
+    // run intake
+    if(AlfredoConnect.buttonHeld(0, buttonIntake)){
+      if(firstRun){
+        intake.run();
+        hadNote = robotState.hasNote();
+        firstRun = false;
+      }
+      else{
+        if(!hadNote && robotState.hasNote()){
+          intake.stop();
+        }
       }
     }
-  }
-  else if(AlfredoConnect.buttonHeld(0, buttonSource)){
-    shooter.intake();
-    intake.outtake();
-    firstRun = true;
-  }
-  else{
-    intake.stop();
-    firstRun = true;
-  }
+    else if(AlfredoConnect.buttonHeld(0, buttonSource)){
+      shooter.intake();
+      intake.outtake();
+      firstRun = true;
+    }
+    else{
+      intake.stop();
+      firstRun = true;
+    }
 
-  // queue system
-  if(AlfredoConnect.buttonHeld(0, buttonAmp)){
-    robotState.setNextShot(1);
-    serialBluetooth.println("AMP");
-  }
-  else if(AlfredoConnect.buttonHeld(0, buttonSub)){
-    robotState.setNextShot(2);
-    serialBluetooth.println("SPEAKER");
-  }
-  // else if(AlfredoConnect.buttonHeld(0, buttonPodium)){
-  //   robotState.setNextShot(3);
-  //   serialBluetooth.println("PODIUM");
-  // }
-  else if(AlfredoConnect.buttonHeld(0, buttonPass)){
-    robotState.setNextShot(4);
-    serialBluetooth.println("PASS");
-  }
-  // execute
-  if(AlfredoConnect.buttonHeld(0, buttonExecute)){
-    if(robotState.getNextShot() == 1){ // amp
-      intake.run();
-      shooter.ampShot();
+    // queue system
+    if(AlfredoConnect.buttonHeld(0, buttonAmp)){
+      robotState.setNextShot(1);
+      serialBluetooth.println("AMP");
     }
-    else if(robotState.getNextShot() == 2){ // subwoofer
-      shooter.subShot();
-      
+    else if(AlfredoConnect.buttonHeld(0, buttonSub)){
+      robotState.setNextShot(2);
+      serialBluetooth.println("SPEAKER");
     }
-    // else if(robotState.getNextShot() == 3){ // podium
-    //   shooter.podiumShot();
+    // else if(AlfredoConnect.buttonHeld(0, buttonPodium)){
+    //   robotState.setNextShot(3);
+    //   serialBluetooth.println("PODIUM");
     // }
-    else if(robotState.getNextShot() == 4){ // pass
-      shooter.passingShot();
+    else if(AlfredoConnect.buttonHeld(0, buttonPass)){
+      robotState.setNextShot(4);
+      serialBluetooth.println("PASS");
+    }
+    // execute
+    if(AlfredoConnect.buttonHeld(0, buttonExecute)){
+      if(robotState.getNextShot() == 1){ // amp
+        intake.run();
+        shooter.ampShot();
+      }
+      else if(robotState.getNextShot() == 2){ // subwoofer
+        shooter.subShot();
+
+      }
+      // else if(robotState.getNextShot() == 3){ // podium
+      //   shooter.podiumShot();
+      // }
+      else if(robotState.getNextShot() == 4){ // pass
+        shooter.passingShot();
+      }
+    }
+    else if(!AlfredoConnect.buttonHeld(0, buttonSource)){
+      shooter.stop();
+    }
+
+    if(AlfredoConnect.buttonHeld(0, buttonClimb)){
+      climber.deployClimber();
+    }
+    else{
+      climber.stowClimber();
+    }
+
+    if(AlfredoConnect.buttonHeld(0, buttonDeployReaction)){
+      climber.deployReaction();
+    }
+    if(AlfredoConnect.buttonHeld(0, buttonStowReaction)){
+      climber.stowReaction();
     }
   }
-  else if(!AlfredoConnect.buttonHeld(0, buttonSource)){
-    shooter.stop();
-  }
 
-  if(AlfredoConnect.buttonHeld(0, buttonClimb)){
-    climber.deployClimber();
-  }
-  else{
-    climber.stowClimber();
-  }
-
-  if(AlfredoConnect.buttonHeld(0, buttonDeployReaction)){
-    climber.deployReaction();
-  }
-  if(AlfredoConnect.buttonHeld(0, buttonStowReaction)){
-    climber.stowReaction();
-  }
-  }
-
-  if(AlfredoConnect.keyHeld(Key::T)){
-    drivetrain.TurnToAngle(30);
-  }
-  if(AlfredoConnect.keyHeld(Key::Y)){
-    drivetrain.TurnToAngle(-30);
-  }
-
-  if(AlfredoConnect.buttonHeld(0, 9)){
-    serialBluetooth.println(robotState.getYaw());
+  // zero yaw
+  if(AlfredoConnect.buttonHeld(0, buttonZeroYaw)){
     robotState.zeroYaw();
   }
 
-  if(AlfredoConnect.keyHeld(Key::U)){
-    intake.runUntilBreak();
-    drivetrain.LinearHeadingDriveUntilIntake(-12*25.4);
+  // testing auton
+  // if(AlfredoConnect.keyHeld(Key::U)){
+  //   intake.runUntilBreak();
+  //   drivetrain.LinearHeadingDriveUntilIntake(-12*25.4);
+  //   robotState.setAuto();
+  // }
+
+  // auton enable / disable code
+  if(AlfredoConnect.keyHeld(Key::W)){
+    auton.enableAuton();
     robotState.setAuto();
   }
+  if(AlfredoConnect.keyHeld(Key::ControlLeft)){
+    auton.disableAuton();
+    robotState.setTeleop();
+  }
 
+  // state override if needed
   if(AlfredoConnect.keyHeld(Key::Q)){
     robotState.setTeleop();
   }
 
   // enable / disable
-  if(AlfredoConnect.keyHeld(Key::E)){
+  if(AlfredoConnect.keyHeld(Key::Space)){
     intake.stop();
     shooter.stop();
+    drivetrain.cancelAuto();
     drivetrain.ArcadeDrive(0,0);
 
     robotState.setEnable(!robotState.isEnabled());
@@ -220,12 +229,20 @@ void loop() {
 
   }
 
-  if(AlfredoConnect.keyHeld(Key::ControlLeft)){
-    drivetrain.cancelAuto();
+  // auton selection
+  if(AlfredoConnect.keyHeld(Key::Digit1)){
+    auton.taxi(-25.4*taxiDistanceIn);
+    serialBluetooth.println("AUTON SELECTED: TAXI");
+  }
+  if(AlfredoConnect.keyHeld(Key::Digit2)){
+    auton.preload();
+    serialBluetooth.println("AUTON SELECTED: PRELOAD");
+  }
+  if(AlfredoConnect.keyHeld(Key::Digit3)){
+    auton.preloadTaxi(-25.4*taxiDistanceIn);
+    serialBluetooth.println("AUTON SELECTED: PRELOAD+TAXI");
   }
 
-  // serialBluetooth.println("Next shot: " + String(robotState.getNextShot()) + " " + String(drivetrain.getThetaError()) + " " + String(tof) + " " + String(robotState.hasNote()) + " "+ String(drivetrain.getLeftError()) + " " + String(drivetrain.getRightError()));
-  //serialBluetooth.println(robotState.hasNote());
 }
 ////////////////////////////////////////////////////////////////////// Function Code //////////////////////////////////////////////////////////////////////
  

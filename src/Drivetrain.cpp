@@ -49,12 +49,14 @@ uint8_t Drivetrain::update(){
         if(direction > 0){
             if(currentLeft > ySetpoint){
                 cancelAuto();
+                autonFinished = true;
                 return 1;
             }
         }
         else{
             if(currentLeft < ySetpoint){
                 cancelAuto();
+                autonFinished = true;
                 return 1;
             }
         }
@@ -71,18 +73,21 @@ uint8_t Drivetrain::update(){
 
         if(robotState->hasNote()){
             cancelAuto();
+            autonFinished = true;
             return 1;
         }
 
         if(direction > 0){
             if(currentLeft > ySetpoint){
                 cancelAuto();
+                autonFinished = true;
                 return 1;
             }
         }
         else{
             if(currentLeft < ySetpoint){
                 cancelAuto();
+                autonFinished = true;
                 return 1;
             }
         }
@@ -93,6 +98,7 @@ uint8_t Drivetrain::update(){
     if(driveMode == 2){
         if(abs(theta_Setpoint-current_Theta) < theta_ErrorThreshold){
             cancelAuto();
+            autonFinished = true;
             return 1;
         }
 
@@ -199,6 +205,7 @@ void Drivetrain::ChezyDrive(double linY, double angZ, boolean isQuickTurn)
 
 // drive in the current direction with heading correction (kinda)
 void Drivetrain::LinearHeadingDrive(double mm){
+    autonFinished = false;
     driveMode = 1;
 
     resetEncoders();
@@ -212,6 +219,7 @@ void Drivetrain::LinearHeadingDrive(double mm){
 }
 
 void Drivetrain::LinearHeadingDriveUntilIntake(double mm){
+    autonFinished = false;
     driveMode = 4;
 
     resetEncoders();
@@ -225,8 +233,8 @@ void Drivetrain::LinearHeadingDriveUntilIntake(double mm){
 }
 
 // turn to angle. 
-void Drivetrain::TurnToAngle(double theta)
-{
+void Drivetrain::TurnToAngle(double theta){
+    autonFinished = false;
     driveMode = 2;
     
     theta_Setpoint = theta;

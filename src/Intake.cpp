@@ -23,6 +23,7 @@ uint8_t Intake::update(){
     if(intakeMode == 2){
         if(robotState->hasNote()){
             stop();
+            autonFinished = true;
             return 1;
         }
     }
@@ -30,6 +31,7 @@ uint8_t Intake::update(){
     if(intakeMode == 3){
         if(!robotState->hasNote()){
             stop();
+            autonFinished = true;
             return 1;
         }
     }
@@ -62,11 +64,13 @@ void Intake::run(double kS){
 }
 
 void Intake::runUntilBreak(){
+    autonFinished = false;
     intakeMode = 2;
     setPower = Intake_IN_kS;
 }
 
 void Intake::runUntilEmpty(){
+    autonFinished = false;
     intakeMode = 3;
     setPower = Intake_SHOOT_kS;
 }

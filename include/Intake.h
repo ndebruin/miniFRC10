@@ -26,7 +26,8 @@ class Intake
 
         uint16_t getRange();
 
-        bool hasNote();
+
+        bool autoFinished(){return autonFinished;}
     private:
         NoU_Motor* intakeMotor;
 
@@ -39,6 +40,8 @@ class Intake
         // 2 - intake
         // 3 - shoot
         uint8_t intakeMode;
+
+        bool autonFinished = false;
 
 };
 

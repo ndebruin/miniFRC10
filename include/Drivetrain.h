@@ -46,11 +46,15 @@ class Drivetrain
             ArcadeDrive(0,0);
         }
 
+        bool autoFinished(){return autonFinished;}
+
 
     private:
         NoU_Motor* leftMotor;
         NoU_Motor* rightMotor;
-        State* robotState;    
+        State* robotState;  
+
+        bool autonFinished = false;  
         
         // 0 - open loop
         // 1 - linear drive with heading correction
