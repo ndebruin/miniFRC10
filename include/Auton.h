@@ -60,6 +60,7 @@ class Auton
         bool routineFinished = false;
 
         bool firstRun = true;
+        bool secondRun = true;
 
         uint8_t routineCount = 0;
         

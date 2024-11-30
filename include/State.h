@@ -99,11 +99,6 @@ class State
             return inAuto;
         }
 
-
-
-        
-
-
     private:
 
         bool enabled =false;
@@ -111,8 +106,6 @@ class State
         bool blue;
 
         bool inAuto = false;
-
-        
 
         // 0 - stop
         // 1 - amp

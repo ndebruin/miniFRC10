@@ -49,7 +49,7 @@
 
 
 #define SUBWOOFER_Top_kS 1.0
-#define SUBWOOFER_Bottom_kS 0.9
+#define SUBWOOFER_Bottom_kS 1.0
 
 #define PODIUM_Top_kS 0.0
 #define PODIUM_Bottom_kS 0.0
@@ -78,11 +78,11 @@
 #define climberChannel 1
 #define reactionClimberChannel 2
 
-#define climberStowAngle   160
-#define climberDeployAngle 80
+#define climberStowAngle   0
+#define climberDeployAngle 105
 
-#define reactionStowAngle   0
-#define reactionDeployAngle 145
+#define reactionStowAngle   105
+#define reactionDeployAngle 0
 
 ////////////////////////////////////////////////////////////////////// Controller //////////////////////////////////////////////////////////////////////
 
@@ -108,4 +108,4 @@
 
 ////////////////////////////////////////////////////////////////////// Autonomus //////////////////////////////////////////////////////////////////////
 
-#define taxiDistanceIn 24
+#define taxiDistanceIn 48

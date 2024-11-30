@@ -157,7 +157,6 @@ void loop() {
     // execute
     if(AlfredoConnect.buttonHeld(0, buttonExecute)){
       if(robotState.getNextShot() == 1){ // amp
-        intake.run();
         shooter.ampShot();
       }
       else if(robotState.getNextShot() == 2){ // subwoofer
@@ -207,14 +206,11 @@ void loop() {
     auton.enableAuton();
     robotState.setAuto();
   }
-  if(AlfredoConnect.keyHeld(Key::ControlLeft)){
-    auton.disableAuton();
-    robotState.setTeleop();
-  }
 
   // state override if needed
   if(AlfredoConnect.keyHeld(Key::Q)){
     robotState.setTeleop();
+    auton.disableAuton();
   }
 
   // enable / disable
@@ -223,10 +219,17 @@ void loop() {
     shooter.stop();
     drivetrain.cancelAuto();
     drivetrain.ArcadeDrive(0,0);
+    robotState.setTeleop();
+    auton.disableAuton();
 
-    robotState.setEnable(!robotState.isEnabled());
-    digitalWrite(LED_BUILTIN, robotState.isEnabled());
+    robotState.setEnable(false);
+    digitalWrite(LED_BUILTIN, LOW);
 
+  }
+
+  if(AlfredoConnect.keyHeld(Key::ControlLeft)){
+    robotState.setEnable(true);
+    digitalWrite(LED_BUILTIN, HIGH);
   }
 
   // auton selection

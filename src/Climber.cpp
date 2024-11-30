@@ -31,11 +31,13 @@ uint8_t Climber::getMode(){
 void Climber::stowClimber(){
     climberMode = 0;
     climberServo->write(climberStowAngle);
+    reactionServo->write(reactionStowAngle);
 }
 
 void Climber::deployClimber(){
     climberMode = 1;
     climberServo->write(climberDeployAngle);
+    reactionServo->write(reactionDeployAngle);
 }
 
 void Climber::stowReaction(){

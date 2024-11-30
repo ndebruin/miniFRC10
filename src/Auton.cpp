@@ -25,33 +25,43 @@ uint8_t Auton::update(){
         else if(autonSelected == 2){
             if(firstRun){
                 shooter->subShot();
-                timer(500);
                 firstRun = false;
-            } 
+                secondRun = true;
+                timeStart = millis();
+                
+            }
             // this second thing cannot happen on the same 
             // update() call as the first thing
-            else if(!timerStarted && !intake->autoFinished()){ // signifies timer being done
-                intake->runUntilEmpty();
-            }
-            if(intake->autoFinished()){
-                timer(500);
-            }
-            if(!timerStarted && intake->autoFinished()){
-                routineFinished = 1;
+            else if(secondRun && millis() - timeStart > 1000){ // signifies timer being done
+                intake->run();
+                secondRun = false;
+                timeStart = millis();
+                routineFinished = true;
                 return 1;
             }
+
         }
         // preload + taxi
         else if(autonSelected == 3){
-            if(routineCount == 0){
-                preload();
-                routineCount++;
+            if(firstRun){
+                shooter->subShot();
+                firstRun = false;
+                secondRun = true;
+                timeStart = millis();
+                
             }
-            else if(routineCount == 1 && routineFinished){
-                taxi(taxiDist);
-                routineCount++;
+            // this second thing cannot happen on the same 
+            // update() call as the first thing
+            else if(secondRun && millis() - timeStart > 2000){ // signifies timer being done
+                intake->run();
+                secondRun = false;
+                timeStart = millis();
+                
             }
-            else if(routineCount == 2 && routineFinished){
+            else if(!secondRun && millis() - timeStart > 2000){
+                intake->stop();
+                shooter->stop();
+                drivetrain->LinearHeadingDrive(-25.4*taxiDistanceIn);
                 routineFinished = true;
                 return 1;
             }
@@ -84,6 +94,8 @@ void Auton::taxi(double mm){
 void Auton::preload(){
     autonSelected = 2;
     routineFinished = false;
+    firstRun = true;
+    secondRun = true;
     routineCount = 0;
 }
 
